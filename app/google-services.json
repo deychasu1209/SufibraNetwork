@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "892500996286",
+    "project_id": "sufibranetwork",
+    "storage_bucket": "sufibranetwork.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:892500996286:android:64b211b8113d6c77ff2eef",
+        "android_client_info": {
+          "package_name": "com.sufibra.network"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWdb8U3DvbUU0-a3QTdIfM4fiK5JJsjA0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
