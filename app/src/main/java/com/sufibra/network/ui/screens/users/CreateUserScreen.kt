@@ -116,8 +116,6 @@ fun CreateUserScreen(
 
                 if (rol == "TECHNICIAN") {
 
-                    var telefono by remember { mutableStateOf("") }
-
                     OutlinedTextField(
                         value = telefono,
                         onValueChange = { input ->
@@ -175,3 +173,6 @@ fun CreateUserScreen(
         }
     }
 }
+
+
+
