@@ -476,10 +476,10 @@ fun formatDate(timestamp: Long): String {
 @Composable
 fun StatusBadge(text: String, backgroundColor: Color) {
     val colorScheme = MaterialTheme.colorScheme
-    val contentColor = if (backgroundColor.luminance() > 0.55f) {
+    val contentColor = if (backgroundColor.luminance() > 0.75f) {
         colorScheme.onSurface
     } else {
-        colorScheme.surface
+        Color.White
     }
 
     Surface(
@@ -494,3 +494,5 @@ fun StatusBadge(text: String, backgroundColor: Color) {
         )
     }
 }
+
+
