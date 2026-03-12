@@ -71,6 +71,5 @@ val OnErrorContainerDark = Color(0xFFF9DEDC)
 // Shared
 val AppScrim = Color(0xFF000000)
 
-@Deprecated("Temporary compatibility token. Migrate screens to MaterialTheme.colorScheme surfaces.")
-val Cards = LightSurfaceContainer
+
 

@@ -1,28 +1,41 @@
 package com.sufibra.network.ui.screens.events
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sufibra.network.viewmodel.EventViewModel
+import androidx.navigation.NavController
 import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.navigation.TechnicianBaseScreen
 import com.sufibra.network.ui.navigation.Screen
-import com.sufibra.network.ui.theme.Cards
-
+import com.sufibra.network.viewmodel.EventViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun TechnicianAvailableEventsScreen(navController: NavController) {
 
     val viewModel: EventViewModel = viewModel()
     val events by viewModel.availableEvents.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         viewModel.loadAvailableEvents()
@@ -39,7 +52,8 @@ fun TechnicianAvailableEventsScreen(navController: NavController) {
 
             Text(
                 text = "Eventos Disponibles",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -53,7 +67,10 @@ fun TechnicianAvailableEventsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("${events.size} eventos disponibles")
+            Text(
+                text = "${events.size} eventos disponibles",
+                color = colorScheme.onSurfaceVariant
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -81,11 +98,12 @@ fun TechnicianEventCard(
     event: Event,
     onClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
 
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(
-            containerColor = Cards
+            containerColor = colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -100,21 +118,24 @@ fun TechnicianEventCard(
 
             Text(
                 text = event.tipoEvento,
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
+                color = colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = event.descripcion,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = event.estadoEvento,
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
+                color = colorScheme.onSurfaceVariant
             )
         }
     }
