@@ -1,15 +1,39 @@
 package com.sufibra.network.ui.screens.events
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.domain.model.Client
 import com.sufibra.network.domain.model.Event
@@ -24,6 +48,7 @@ fun CreateAveriaScreen(navController: NavController) {
     val viewModel: EventViewModel = viewModel()
     val clients by viewModel.clients.collectAsState()
     val scope = rememberCoroutineScope()
+    val colorScheme = MaterialTheme.colorScheme
 
     var prioridad by remember { mutableStateOf("MEDIA") }
     var descripcion by remember { mutableStateOf("") }
@@ -38,7 +63,9 @@ fun CreateAveriaScreen(navController: NavController) {
         viewModel.loadClients()
     }
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        containerColor = colorScheme.background
+    ) { paddingValues ->
 
         Column(
             modifier = Modifier
@@ -58,7 +85,6 @@ fun CreateAveriaScreen(navController: NavController) {
                     .padding(horizontal = 16.dp)
             ) {
 
-                // PRIORIDAD
                 ExposedDropdownMenuBox(
                     expanded = expandedPriority,
                     onExpandedChange = { expandedPriority = !expandedPriority }
@@ -94,7 +120,6 @@ fun CreateAveriaScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // CLIENTE
                 ExposedDropdownMenuBox(
                     expanded = expandedClient,
                     onExpandedChange = { expandedClient = !expandedClient }
@@ -195,11 +220,12 @@ fun CreateAveriaScreen(navController: NavController) {
 
 @Composable
 fun ClientDetailCard(client: Client) {
+    val colorScheme = MaterialTheme.colorScheme
 
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = colorScheme.surfaceVariant
         )
     ) {
         Column(
@@ -210,17 +236,22 @@ fun ClientDetailCard(client: Client) {
 
             Text(
                 text = "Datos del Cliente",
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleSmall,
+                color = colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Nombre: ${client.nombresApellidos}")
-            Text("DNI: ${client.dni}")
-            Text("Celular: ${client.celular}")
-            Text("Dirección: ${client.direccion}")
-            Text("Zona: ${client.zona}")
-            Text("Estado: ${if (client.estadoCliente) "Activo" else "Inactivo"}")
+            Text("Nombre: ${client.nombresApellidos}", color = colorScheme.onSurface)
+            Text("DNI: ${client.dni}", color = colorScheme.onSurface)
+            Text("Celular: ${client.celular}", color = colorScheme.onSurface)
+            Text("Dirección: ${client.direccion}", color = colorScheme.onSurface)
+            Text("Zona: ${client.zona}", color = colorScheme.onSurface)
+            Text(
+                text = "Estado: ${if (client.estadoCliente) "Activo" else "Inactivo"}",
+                color = if (client.estadoCliente) colorScheme.primary else colorScheme.error
+            )
         }
     }
 }
+

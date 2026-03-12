@@ -1,21 +1,39 @@
 package com.sufibra.network.ui.screens.users
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.sufibra.network.viewmodel.UsersViewModel
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import com.sufibra.network.ui.components.BackTopBar
-
+import com.sufibra.network.viewmodel.UsersViewModel
 
 @Composable
 fun CreateUserScreen(
@@ -27,6 +45,7 @@ fun CreateUserScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val operationSuccess by viewModel.operationSuccess.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     var nombres by remember { mutableStateOf("") }
     var apellidos by remember { mutableStateOf("") }
@@ -45,7 +64,9 @@ fun CreateUserScreen(
 
     val context = LocalContext.current
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        containerColor = colorScheme.background
+    ) { paddingValues ->
 
         Column(
             modifier = Modifier
@@ -96,7 +117,10 @@ fun CreateUserScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(text = "Rol")
+                Text(
+                    text = "Rol",
+                    color = colorScheme.onSurfaceVariant
+                )
 
                 Row {
                     RadioButton(
@@ -124,7 +148,10 @@ fun CreateUserScreen(
                         },
                         label = { Text("Teléfono") },
                         leadingIcon = {
-                            Text("+51 ")
+                            Text(
+                                text = "+51 ",
+                                color = colorScheme.onSurfaceVariant
+                            )
                         },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number
@@ -173,6 +200,3 @@ fun CreateUserScreen(
         }
     }
 }
-
-
-

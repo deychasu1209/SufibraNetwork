@@ -1,9 +1,25 @@
 package com.sufibra.network.ui.screens.events
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -23,6 +39,7 @@ fun FinalizeEventScreen(
     val viewModel: EventViewModel = viewModel()
     val finalizeEventSuccess by viewModel.finalizeEventSuccess.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     var showFinalizeDialog by remember { mutableStateOf(false) }
 
@@ -37,57 +54,63 @@ fun FinalizeEventScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-
-        BackTopBar(
-            title = "Finalizar Evento",
-            navController = navController
-        )
-
+    Scaffold(
+        containerColor = colorScheme.background
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(paddingValues)
         ) {
 
-            Text(
-                text = "Completa la información para finalizar el evento.",
-                style = MaterialTheme.typography.bodyMedium
+            BackTopBar(
+                title = "Finalizar Evento",
+                navController = navController
             )
 
-            OutlinedTextField(
-                value = solucionAplicada,
-                onValueChange = { solucionAplicada = it },
-                label = { Text("Solución aplicada") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 4,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences
-                )
-            )
-
-            OutlinedTextField(
-                value = observaciones,
-                onValueChange = { observaciones = it },
-                label = { Text("Observaciones (opcional)") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences
-                )
-            )
-
-            Button(
-                onClick = {
-                    showFinalizeDialog = true
-                },
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Finalizar evento")
+
+                Text(
+                    text = "Completa la información para finalizar el evento.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colorScheme.onSurfaceVariant
+                )
+
+                OutlinedTextField(
+                    value = solucionAplicada,
+                    onValueChange = { solucionAplicada = it },
+                    label = { Text("Solución aplicada") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences
+                    )
+                )
+
+                OutlinedTextField(
+                    value = observaciones,
+                    onValueChange = { observaciones = it },
+                    label = { Text("Observaciones (opcional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences
+                    )
+                )
+
+                Button(
+                    onClick = {
+                        showFinalizeDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Finalizar evento")
+                }
             }
         }
     }
