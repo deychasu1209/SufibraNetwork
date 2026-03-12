@@ -1,32 +1,55 @@
 package com.sufibra.network.ui.screens.login
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import com.sufibra.network.ui.navigation.Screen
-import com.sufibra.network.viewmodel.LoginViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import com.sufibra.network.R
-import com.sufibra.network.ui.theme.AzulPrincipal
-import com.sufibra.network.ui.theme.Turquesa
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.sufibra.network.R
+import com.sufibra.network.ui.navigation.Screen
+import com.sufibra.network.ui.theme.AzulPrincipal
+import com.sufibra.network.ui.theme.AzulPrincipalOscuro
+import com.sufibra.network.ui.theme.Turquesa
+import com.sufibra.network.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -36,13 +59,17 @@ fun LoginScreen(navController: NavController) {
     val isLoading by viewModel.isLoading.collectAsState()
     val loggedUser by viewModel.loggedUser.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
+    val gradientColors = if (MaterialTheme.colorScheme.background == com.sufibra.network.ui.theme.DarkBackground) {
+        listOf(AzulPrincipalOscuro, AzulPrincipal)
+    } else {
+        listOf(AzulPrincipal, Turquesa)
+    }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var showPassword by remember {mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
 
-
-    // Si login fue exitoso, navegar
     LaunchedEffect(loggedUser) {
         loggedUser?.let { user ->
 
@@ -60,13 +87,12 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(AzulPrincipal, Turquesa)
+                    colors = gradientColors
                 )
             )
     ) {
@@ -83,7 +109,6 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Logo y título
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -100,15 +125,17 @@ fun LoginScreen(navController: NavController) {
                 )
                 Text(
                     text = "NETWORK",
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = Color.White.copy(alpha = 0.85f),
                     fontSize = 14.sp
                 )
             }
 
-            // Card blanca
             Card(
                 shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = colorScheme.surface
+                )
             ) {
 
                 Column(
@@ -119,14 +146,14 @@ fun LoginScreen(navController: NavController) {
                     Text(
                         text = "Iniciar sesión",
                         style = MaterialTheme.typography.titleLarge,
-                        color = AzulPrincipal
+                        color = colorScheme.primary
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
                         text = "Bienvenido a tu red de fibra",
-                        color = AzulPrincipal.copy(alpha = 0.6f)
+                        color = colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -165,6 +192,7 @@ fun LoginScreen(navController: NavController) {
 
                         Text(
                             text = "Mostrar contraseña",
+                            color = colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .padding(start = 4.dp)
                                 .clickable {
@@ -187,7 +215,7 @@ fun LoginScreen(navController: NavController) {
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                color = Color.White
+                                color = colorScheme.onPrimary
                             )
                         } else {
                             Text("Iniciar sesión")
@@ -198,7 +226,7 @@ fun LoginScreen(navController: NavController) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = it,
-                            color = MaterialTheme.colorScheme.error
+                            color = colorScheme.error
                         )
                     }
                 }
@@ -208,9 +236,11 @@ fun LoginScreen(navController: NavController) {
 
             Text(
                 text = "© Sufibra Network",
-                color = Color.White.copy(alpha = 0.7f),
+                color = Color.White.copy(alpha = 0.75f),
                 fontSize = 12.sp
             )
         }
     }
 }
+
+

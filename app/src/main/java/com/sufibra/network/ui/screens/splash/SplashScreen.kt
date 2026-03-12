@@ -1,10 +1,21 @@
 package com.sufibra.network.ui.screens.splash
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -19,6 +30,8 @@ import com.sufibra.network.R
 import com.sufibra.network.data.repository.UserRepository
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AzulPrincipal
+import com.sufibra.network.ui.theme.AzulPrincipalOscuro
+import com.sufibra.network.ui.theme.DarkBackground
 import com.sufibra.network.ui.theme.Turquesa
 import kotlinx.coroutines.delay
 
@@ -27,6 +40,12 @@ fun SplashScreen(navController: NavController) {
 
     val auth = FirebaseAuth.getInstance()
     val userRepository = remember { UserRepository() }
+    val colorScheme = MaterialTheme.colorScheme
+    val gradientColors = if (colorScheme.background == DarkBackground) {
+        listOf(AzulPrincipalOscuro, AzulPrincipal)
+    } else {
+        listOf(AzulPrincipal, Turquesa)
+    }
 
     LaunchedEffect(Unit) {
 
@@ -80,7 +99,7 @@ fun SplashScreen(navController: NavController) {
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(AzulPrincipal, Turquesa)
+                    colors = gradientColors
                 )
             ),
         contentAlignment = Alignment.Center
@@ -109,9 +128,11 @@ fun SplashScreen(navController: NavController) {
 
             Text(
                 text = "INTERNET, HOGAR Y NEGOCIO",
-                color = Color.White.copy(alpha = 0.8f),
+                color = Color.White.copy(alpha = 0.85f),
                 fontSize = 14.sp
             )
         }
     }
 }
+
+
