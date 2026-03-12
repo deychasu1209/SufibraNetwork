@@ -1,20 +1,32 @@
 package com.sufibra.network.ui.components.navigation
 
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import com.sufibra.network.R
 import com.sufibra.network.ui.navigation.Screen
-import com.sufibra.network.ui.theme.AzulPrincipal
 
 @Composable
 fun AdminNavigationBar(navController: NavController) {
-
     val currentRoute = navController.currentBackStackEntry?.destination?.route
+    val colorScheme = MaterialTheme.colorScheme
+    val itemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = colorScheme.primary,
+        selectedTextColor = colorScheme.primary,
+        unselectedIconColor = colorScheme.onSurfaceVariant,
+        unselectedTextColor = colorScheme.onSurfaceVariant,
+        indicatorColor = colorScheme.secondaryContainer
+    )
 
     NavigationBar(
-        containerColor = AzulPrincipal.copy(alpha = 0.10f)
+        containerColor = colorScheme.surface,
+        contentColor = colorScheme.onSurfaceVariant
     ) {
 
         NavigationBarItem(
@@ -29,11 +41,7 @@ fun AdminNavigationBar(navController: NavController) {
                 )
             },
             label = { Text("Inicio") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AzulPrincipal,
-                selectedTextColor = AzulPrincipal,
-                indicatorColor = AzulPrincipal.copy(alpha = 0.15f)
-            )
+            colors = itemColors
         )
 
         NavigationBarItem(
@@ -48,11 +56,7 @@ fun AdminNavigationBar(navController: NavController) {
                 )
             },
             label = { Text("Eventos") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AzulPrincipal,
-                selectedTextColor = AzulPrincipal,
-                indicatorColor = AzulPrincipal.copy(alpha = 0.15f)
-            )
+            colors = itemColors
         )
 
         NavigationBarItem(
@@ -67,16 +71,11 @@ fun AdminNavigationBar(navController: NavController) {
                 )
             },
             label = { Text("Usuarios") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AzulPrincipal,
-                selectedTextColor = AzulPrincipal,
-                indicatorColor = AzulPrincipal.copy(alpha = 0.15f)
-            )
+            colors = itemColors
         )
 
         NavigationBarItem(
-            selected = false,// cambiar aqui
-            // selected = currentRoute == Screen.AdminClients.route, // cambiar nombre
+            selected = false,
             onClick = {},
             icon = {
                 Icon(
@@ -85,16 +84,11 @@ fun AdminNavigationBar(navController: NavController) {
                 )
             },
             label = { Text("Clientes") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AzulPrincipal,
-                selectedTextColor = AzulPrincipal,
-                indicatorColor = AzulPrincipal.copy(alpha = 0.15f)
-            )
+            colors = itemColors
         )
 
         NavigationBarItem(
-            selected = false,// cambiar aqui
-            // selected = currentRoute == Screen.AdminProfile.route, // cambiar nombre
+            selected = false,
             onClick = {},
             icon = {
                 Icon(
@@ -103,11 +97,7 @@ fun AdminNavigationBar(navController: NavController) {
                 )
             },
             label = { Text("Perfil") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AzulPrincipal,
-                selectedTextColor = AzulPrincipal,
-                indicatorColor = AzulPrincipal.copy(alpha = 0.15f)
-            )
+            colors = itemColors
         )
     }
 }
