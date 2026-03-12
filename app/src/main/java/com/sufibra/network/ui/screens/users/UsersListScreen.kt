@@ -1,10 +1,31 @@
 package com.sufibra.network.ui.screens.users
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -13,9 +34,7 @@ import com.sufibra.network.domain.model.User
 import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
 import com.sufibra.network.ui.navigation.Screen
-import com.sufibra.network.ui.theme.Cards
 import com.sufibra.network.viewmodel.UsersViewModel
-
 
 @Composable
 fun UsersListScreen(
@@ -135,17 +154,19 @@ fun UsersListScreen(
         }
     }
 }
+
 @Composable
 fun UserItem(
     user: User,
     navController: NavController,
     onToggleStatus: (Boolean) -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Cards
+            containerColor = colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -155,9 +176,15 @@ fun UserItem(
             modifier = Modifier.padding(12.dp)
         ) {
 
-            Text(text = "${user.nombres} ${user.apellidos}")
+            Text(
+                text = "${user.nombres} ${user.apellidos}",
+                color = colorScheme.onSurface
+            )
 
-            Text(text = "Rol: ${user.rol}")
+            Text(
+                text = "Rol: ${user.rol}",
+                color = colorScheme.onSurfaceVariant
+            )
 
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -167,9 +194,9 @@ fun UserItem(
                 Text(
                     text = if (user.estado) "Activo" else "Inactivo",
                     color = if (user.estado)
-                        MaterialTheme.colorScheme.primary
+                        colorScheme.primary
                     else
-                        MaterialTheme.colorScheme.error
+                        colorScheme.error
                 )
 
                 Switch(
@@ -181,7 +208,10 @@ fun UserItem(
             }
 
             if (user.rol == "TECHNICIAN") {
-                Text(text = "Zona: ${user.zonaAsignada ?: "No asignada"}")
+                Text(
+                    text = "Zona: ${user.zonaAsignada ?: "No asignada"}",
+                    color = colorScheme.onSurfaceVariant
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -198,4 +228,3 @@ fun UserItem(
         }
     }
 }
-

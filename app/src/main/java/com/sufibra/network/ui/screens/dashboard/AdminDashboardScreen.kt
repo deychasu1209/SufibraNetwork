@@ -1,32 +1,38 @@
 package com.sufibra.network.ui.screens.dashboard
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.sufibra.network.ui.navigation.Screen
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.sufibra.network.viewmodel.SessionViewModel
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.filled.*
-import com.sufibra.network.ui.theme.Turquesa
-import androidx.compose.ui.res.painterResource
-import com.sufibra.network.R
-import androidx.compose.foundation.layout.RowScope
+import androidx.navigation.NavController
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
-import com.sufibra.network.ui.theme.Cards
+import com.sufibra.network.ui.navigation.Screen
+import com.sufibra.network.viewmodel.SessionViewModel
 
 @Composable
 fun AdminDashboardScreen(navController: NavController) {
-
     val sessionViewModel: SessionViewModel = viewModel()
+    val colorScheme = MaterialTheme.colorScheme
 
     AdminBaseScreen(navController) { padding ->
 
@@ -37,7 +43,6 @@ fun AdminDashboardScreen(navController: NavController) {
                 .padding(16.dp)
         ) {
 
-            // HEADER
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -53,7 +58,7 @@ fun AdminDashboardScreen(navController: NavController) {
                     modifier = Modifier
                         .size(40.dp)
                         .background(
-                            Turquesa,
+                            colorScheme.secondaryContainer,
                             shape = CircleShape
                         )
                 )
@@ -61,14 +66,14 @@ fun AdminDashboardScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ESTADÍSTICAS
             StatsSection()
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
                 text = "MÓDULOS PRINCIPALES",
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
+                color = colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -143,11 +148,13 @@ fun RowScope.StatCard(
     title: String,
     value: String
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier.weight(1f),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Cards
+            containerColor = colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -158,14 +165,16 @@ fun RowScope.StatCard(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
+                color = colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = colorScheme.onSurface
             )
         }
     }
@@ -177,11 +186,13 @@ fun ModuleCard(
     description: String,
     onClick: (() -> Unit)? = null
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         onClick = { onClick?.invoke() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Cards
+            containerColor = colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -192,11 +203,18 @@ fun ModuleCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = description, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant
+            )
         }
     }
 }
-
 
