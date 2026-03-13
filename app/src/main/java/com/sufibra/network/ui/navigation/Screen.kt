@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.navigation
+﻿package com.sufibra.network.ui.navigation
 
 sealed class Screen(val route: String) {
 
@@ -30,6 +30,7 @@ sealed class Screen(val route: String) {
     }
 
     object TechnicianCurrentJob : Screen("technician_current_job")
+    object TechnicianMyJobs : Screen("technician_my_jobs")
 
     object FinalizeEvent : Screen("finalize_event/{eventId}") {
         fun createRoute(eventId: String) = "finalize_event/$eventId"

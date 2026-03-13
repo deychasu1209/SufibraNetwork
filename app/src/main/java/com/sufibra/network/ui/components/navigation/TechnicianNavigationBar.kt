@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.components.navigation
+﻿package com.sufibra.network.ui.components.navigation
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -60,8 +60,10 @@ fun TechnicianNavigationBar(navController: NavController) {
         )
 
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = currentRoute == Screen.TechnicianMyJobs.route,
+            onClick = {
+                navController.navigate(Screen.TechnicianMyJobs.route)
+            },
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_trabajos),

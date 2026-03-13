@@ -1,26 +1,28 @@
-package com.sufibra.network.ui.navigation
+﻿package com.sufibra.network.ui.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.navigation.compose.*
-import com.sufibra.network.ui.screens.login.LoginScreen
-import com.sufibra.network.ui.screens.splash.SplashScreen
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.sufibra.network.ui.screens.dashboard.AdminDashboardScreen
 import com.sufibra.network.ui.screens.dashboard.TechnicianDashboardScreen
-import com.sufibra.network.ui.screens.users.CreateUserScreen
-import com.sufibra.network.ui.screens.users.UsersListScreen
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import com.sufibra.network.ui.screens.events.CreateAveriaScreen
 import com.sufibra.network.ui.screens.events.CreateInstallationScreen
 import com.sufibra.network.ui.screens.events.EventDetailScreen
 import com.sufibra.network.ui.screens.events.EventsListScreen
-import com.sufibra.network.ui.screens.events.TechnicianAvailableEventsScreen
-import com.sufibra.network.ui.screens.users.EditUserScreen
-import com.sufibra.network.ui.screens.events.TechnicianEventDetailScreen
-import com.sufibra.network.ui.screens.events.TechnicianCurrentJobScreen
 import com.sufibra.network.ui.screens.events.FinalizeEventScreen
-
+import com.sufibra.network.ui.screens.events.TechnicianAvailableEventsScreen
+import com.sufibra.network.ui.screens.events.TechnicianCurrentJobScreen
+import com.sufibra.network.ui.screens.events.TechnicianEventDetailScreen
+import com.sufibra.network.ui.screens.events.TechnicianMyJobsScreen
+import com.sufibra.network.ui.screens.login.LoginScreen
+import com.sufibra.network.ui.screens.splash.SplashScreen
+import com.sufibra.network.ui.screens.users.CreateUserScreen
+import com.sufibra.network.ui.screens.users.EditUserScreen
+import com.sufibra.network.ui.screens.users.UsersListScreen
 
 @Composable
 fun AppNavigation() {
@@ -73,7 +75,6 @@ fun AppNavigation() {
             EventsListScreen(navController)
         }
 
-
         composable(Screen.CreateAveria.route) {
             CreateAveriaScreen(navController)
         }
@@ -120,6 +121,10 @@ fun AppNavigation() {
             TechnicianCurrentJobScreen(navController)
         }
 
+        composable(Screen.TechnicianMyJobs.route) {
+            TechnicianMyJobsScreen(navController)
+        }
+
         composable(
             route = Screen.FinalizeEvent.route,
             arguments = listOf(
@@ -134,6 +139,5 @@ fun AppNavigation() {
                 eventId = eventId
             )
         }
-
     }
 }
