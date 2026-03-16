@@ -11,6 +11,14 @@ sealed class Screen(val route: String) {
 
     object UsersList : Screen("users_list")
 
+    object ClientsList : Screen("clients_list")
+
+    object CreateClient : Screen("create_client")
+
+    object EditClient : Screen("edit_client/{clientId}") {
+        fun createRoute(clientId: String) = "edit_client/$clientId"
+    }
+
     object EditUser : Screen("edit_user/{userId}") {
         fun createRoute(userId: String) = "edit_user/$userId"
     }

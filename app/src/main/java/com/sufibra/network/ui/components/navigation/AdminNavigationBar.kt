@@ -16,6 +16,9 @@ import com.sufibra.network.ui.navigation.Screen
 fun AdminNavigationBar(navController: NavController) {
     val currentRoute = navController.currentBackStackEntry?.destination?.route
     val colorScheme = MaterialTheme.colorScheme
+    val clientsModuleSelected = currentRoute == Screen.ClientsList.route ||
+        currentRoute == Screen.CreateClient.route ||
+        currentRoute == Screen.EditClient.route
     val itemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = colorScheme.primary,
         selectedTextColor = colorScheme.primary,
@@ -75,8 +78,10 @@ fun AdminNavigationBar(navController: NavController) {
         )
 
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = clientsModuleSelected,
+            onClick = {
+                navController.navigate(Screen.ClientsList.route)
+            },
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_clientes),

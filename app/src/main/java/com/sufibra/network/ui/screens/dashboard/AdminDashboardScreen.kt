@@ -100,7 +100,10 @@ fun AdminDashboardScreen(navController: NavController) {
 
             ModuleCard(
                 title = "Clientes",
-                description = "Directorio de clientes y contratos"
+                description = "Directorio de clientes y contratos",
+                onClick = {
+                    navController.navigate(Screen.ClientsList.route)
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))

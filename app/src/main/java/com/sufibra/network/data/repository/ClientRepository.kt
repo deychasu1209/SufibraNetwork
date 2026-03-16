@@ -1,9 +1,8 @@
 package com.sufibra.network.data.repository
 
-import com.google.android.gms.common.api.Api
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
 import com.sufibra.network.domain.model.Client
+import kotlinx.coroutines.tasks.await
 
 class ClientRepository {
 
@@ -13,7 +12,11 @@ class ClientRepository {
     suspend fun getAllClients(): Result<List<Client>> {
         return try {
             val snapshot = clientsCollection.get().await()
-            val clients = snapshot.toObjects(Client::class.java)
+            val clients = snapshot.documents
+                .mapNotNull { document ->
+                    document.toObject(Client::class.java)?.copy(idCliente = document.id)
+                }
+                .sortedBy { it.nombresApellidos.lowercase() }
             Result.success(clients)
         } catch (e: Exception) {
             Result.failure(e)
@@ -32,6 +35,45 @@ class ClientRepository {
                 Result.failure(Exception("Cliente no encontrado"))
             }
 
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createClient(client: Client): Result<Unit> {
+        return try {
+            val document = clientsCollection.document()
+            val clientToSave = client.copy(
+                idCliente = document.id,
+                estadoCliente = true,
+                fechaRegistro = System.currentTimeMillis()
+            )
+            document.set(clientToSave).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateClient(client: Client): Result<Unit> {
+        return try {
+            clientsCollection
+                .document(client.idCliente)
+                .set(client)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateClientStatus(clientId: String, estadoCliente: Boolean): Result<Unit> {
+        return try {
+            clientsCollection
+                .document(clientId)
+                .update("estadoCliente", estadoCliente)
+                .await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

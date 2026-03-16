@@ -12,5 +12,6 @@ data class Client(
     val fotoFachada: String = "",
     val cajaNAP: String = "",
     val puertoNAP: String = "",
-    val estadoCliente: Boolean = true
+    val estadoCliente: Boolean = true,
+    val fechaRegistro: Long = 0L
 )

@@ -9,6 +9,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.sufibra.network.ui.screens.dashboard.AdminDashboardScreen
 import com.sufibra.network.ui.screens.dashboard.TechnicianDashboardScreen
+import com.sufibra.network.ui.screens.clients.ClientsListScreen
+import com.sufibra.network.ui.screens.clients.CreateClientScreen
+import com.sufibra.network.ui.screens.clients.EditClientScreen
 import com.sufibra.network.ui.screens.events.CreateAveriaScreen
 import com.sufibra.network.ui.screens.events.CreateInstallationScreen
 import com.sufibra.network.ui.screens.events.EventDetailScreen
@@ -58,6 +61,14 @@ fun AppNavigation() {
             UsersListScreen(navController)
         }
 
+        composable(Screen.ClientsList.route) {
+            ClientsListScreen(navController)
+        }
+
+        composable(Screen.CreateClient.route) {
+            CreateClientScreen(navController)
+        }
+
         composable(
             route = Screen.EditUser.route,
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
@@ -68,6 +79,19 @@ fun AppNavigation() {
             EditUserScreen(
                 navController = navController,
                 userId = userId
+            )
+        }
+
+        composable(
+            route = Screen.EditClient.route,
+            arguments = listOf(navArgument("clientId") { type = NavType.StringType })
+        ) { backStackEntry ->
+
+            val clientId = backStackEntry.arguments?.getString("clientId") ?: ""
+
+            EditClientScreen(
+                navController = navController,
+                clientId = clientId
             )
         }
 
