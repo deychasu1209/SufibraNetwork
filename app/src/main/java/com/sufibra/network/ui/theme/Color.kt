@@ -10,7 +10,7 @@ val VerdeFinalizado = Color(0xFF2ECC71)
 
 // Status
 val NaranjaTomado = Color(0xFFF39C12)
-val AmarilloMedio = Color(0xFFEEE400)
+val AmarilloMedio = Color(0xFFB9B000)
 val RojoAlto = Color(0xFFFF0000)
 val CelesteBajo = Color(0xFF51C8FF)
 
