@@ -40,6 +40,7 @@ fun TechnicianDashboardScreen(navController: NavController) {
     val sessionViewModel: SessionViewModel = viewModel()
     val eventViewModel: EventViewModel = viewModel()
     val currentEvent by eventViewModel.currentTechnicianEvent.collectAsState()
+    val availableEvents by eventViewModel.availableEvents.collectAsState()
     val clients by eventViewModel.clients.collectAsState()
     val technicianId = FirebaseAuth.getInstance().currentUser?.uid
     val colorScheme = MaterialTheme.colorScheme
@@ -49,6 +50,7 @@ fun TechnicianDashboardScreen(navController: NavController) {
     LaunchedEffect(technicianId) {
         technicianId?.let {
             eventViewModel.loadCurrentTechnicianEvent(it)
+            eventViewModel.loadAvailableEvents()
             eventViewModel.loadClients()
         }
     }
@@ -116,7 +118,7 @@ fun TechnicianDashboardScreen(navController: NavController) {
 
             ModuleCard(
                 title = "Eventos disponibles",
-                description = "4 tareas nuevas",
+                description = "Hay ${availableEvents.size} trabajos nuevos",
                 onClick = {
                     navController.navigate(Screen.TechnicianAvailableEvents.route)
                 }
@@ -126,7 +128,7 @@ fun TechnicianDashboardScreen(navController: NavController) {
 
             ModuleCard(
                 title = "Mis trabajos",
-                description = "Historial y agenda",
+                description = "Evento activo e Historial de trabajos",
                 onClick = {
                     navController.navigate(Screen.TechnicianMyJobs.route)
                 }
@@ -151,4 +153,3 @@ fun TechnicianDashboardScreen(navController: NavController) {
         }
     }
 }
-
