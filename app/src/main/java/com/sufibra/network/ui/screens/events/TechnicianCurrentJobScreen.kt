@@ -20,7 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -46,7 +45,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
-import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
@@ -98,10 +96,32 @@ fun TechnicianCurrentJobScreen(
         }
     }
 
+
+    val actionText = when (currentEvent?.estadoEvento) {
+        "TOMADO" -> "Iniciar trabajo"
+        "EN PROCESO" -> "Finalizar trabajo"
+        else -> null
+    }
+
     Scaffold(
         containerColor = colorScheme.background,
         bottomBar = {
-            TechnicianNavigationBar(navController)
+            Column {
+                if (currentEvent != null && actionText != null) {
+                    TechnicianStickyActionBar(
+                        buttonText = actionText,
+                        onClick = {
+                            when (currentEvent!!.estadoEvento) {
+                                "TOMADO" -> showStartDialog = true
+                                "EN PROCESO" -> navController.navigate(
+                                    Screen.FinalizeEvent.createRoute(currentEvent!!.idEvento)
+                                )
+                            }
+                        }
+                    )
+                }
+                TechnicianNavigationBar(navController)
+            }
         }
     ) { padding ->
         Column(
@@ -454,60 +474,6 @@ fun TechnicianCurrentJobScreen(
                     }
                 }
 
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = colorScheme.surfaceVariant
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = "SIGUIENTE ACCION",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colorScheme.onSurfaceVariant
-                        )
-
-                        Text(
-                            text = when (event.estadoEvento) {
-                                "TOMADO" -> "El evento ya fue tomado. Ahora puedes iniciar el trabajo cuando estes listo para comenzar."
-                                "EN PROCESO" -> "El trabajo ya esta en marcha. Cuando termines, continua con la finalizacion del evento."
-                                else -> "Este evento no tiene una accion manual disponible en esta pantalla."
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colorScheme.onSurface
-                        )
-
-                        if (event.estadoEvento == "TOMADO") {
-                            Button(
-                                onClick = {
-                                    showStartDialog = true
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Iniciar trabajo")
-                            }
-                        }
-
-                        if (event.estadoEvento == "EN PROCESO") {
-                            Button(
-                                onClick = {
-                                    navController.navigate(
-                                        Screen.FinalizeEvent.createRoute(event.idEvento)
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Finalizar trabajo")
-                            }
-                        }
-                    }
-                }
-
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -594,4 +560,6 @@ fun CurrentJobEmptyState() {
         }
     }
 }
+
+
 

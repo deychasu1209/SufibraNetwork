@@ -16,9 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -45,6 +46,7 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
 import com.sufibra.network.ui.theme.AzulPrincipal
@@ -90,6 +92,7 @@ fun TechnicianEventDetailScreen(
     }
 
     val event = events.find { it.idEvento == eventId }
+    val showTakeAction = event?.estadoEvento == "DISPONIBLE"
 
     LaunchedEffect(event?.idEvento) {
         clientExpanded = false
@@ -99,7 +102,20 @@ fun TechnicianEventDetailScreen(
     }
 
     Scaffold(
-        containerColor = colorScheme.background
+        containerColor = colorScheme.background,
+        bottomBar = {
+            Column {
+                if (showTakeAction) {
+                    TechnicianStickyActionBar(
+                        buttonText = "Tomar trabajo",
+                        onClick = {
+                            showTakeEventDialog = true
+                        }
+                    )
+                }
+                TechnicianNavigationBar(navController)
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -114,7 +130,8 @@ fun TechnicianEventDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 if (event == null) {
@@ -430,48 +447,7 @@ fun TechnicianEventDetailScreen(
                         }
                     }
 
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = colorScheme.surfaceVariant
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "ACCION DISPONIBLE",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = colorScheme.onSurfaceVariant
-                            )
-
-                            Text(
-                                text = "Si tomas este evento, pasara a tu trabajo actual y no podras tomar otro hasta finalizarlo.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colorScheme.onSurface
-                            )
-
-                            if (event.estadoEvento == "DISPONIBLE") {
-                                Button(
-                                    onClick = {
-                                        showTakeEventDialog = true
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Tomar evento")
-                                }
-                            } else {
-                                Text(
-                                    text = "Este evento ya no esta disponible para ser tomado.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -542,5 +518,6 @@ fun TechnicianEventDetailScreen(
         }
     }
 }
+
 
 
