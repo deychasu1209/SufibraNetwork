@@ -1,8 +1,11 @@
 ﻿package com.sufibra.network.ui.screens.events
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -36,18 +39,29 @@ fun TechnicianStickyActionBar(
             onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .heightIn(min = 54.dp),
+            shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = containerColor,
                 contentColor = contentColor
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 6.dp,
+                pressedElevation = 8.dp
             )
         ) {
             Icon(
                 painter = painterResource(iconResId),
-                contentDescription = null
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(20.dp)
             )
             androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
-            Text(buttonText)
+            Text(
+                text = buttonText,
+                style = MaterialTheme.typography.titleMedium
+            )
         }
     }
 }
