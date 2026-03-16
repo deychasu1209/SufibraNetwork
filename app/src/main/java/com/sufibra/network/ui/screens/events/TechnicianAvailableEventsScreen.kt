@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.navigation.TechnicianBaseScreen
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
@@ -109,157 +110,158 @@ fun TechnicianAvailableEventsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
         ) {
-
-            Text(
-                text = "Eventos Disponibles",
-                style = MaterialTheme.typography.titleLarge,
-                color = colorScheme.onSurface
+            BackTopBar(
+                title = "Eventos Disponibles",
+                navController = navController
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { filtersExpanded = !filtersExpanded },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = colorScheme.surfaceVariant
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { filtersExpanded = !filtersExpanded },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colorScheme.surfaceVariant
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "Filtros",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = colorScheme.onSurface
-                            )
-
-                            if (activeFiltersCount > 0) {
-                                Surface(
-                                    shape = RoundedCornerShape(50),
-                                    color = colorScheme.primaryContainer
-                                ) {
-                                    Text(
-                                        text = "$activeFiltersCount activos",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = colorScheme.onPrimaryContainer
-                                    )
-                                }
-                            }
-                        }
-
-                        Text(
-                            text = if (filtersExpanded) "Ocultar" else "Abrir",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colorScheme.primary
-                        )
-                    }
-
-                    if (filtersExpanded) {
-                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            CompactFilterSelector(
-                                label = "Orden",
-                                value = selectedSort,
-                                options = listOf(SORT_NEWEST, SORT_OLDEST),
-                                onOptionSelected = { selectedSort = it },
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            CompactFilterSelector(
-                                label = "Prioridad",
-                                value = selectedPriority,
-                                options = listOf(PRIORITY_ALL, PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW),
-                                onOptionSelected = { selectedPriority = it },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            CompactFilterSelector(
-                                label = "Tipo",
-                                value = selectedType,
-                                options = listOf(TYPE_ALL, TYPE_AVERIA, TYPE_INSTALLATION),
-                                onOptionSelected = { selectedType = it },
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            TextButton(
-                                onClick = {
-                                    selectedSort = SORT_NEWEST
-                                    selectedPriority = PRIORITY_ALL
-                                    selectedType = TYPE_ALL
-                                }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Limpiar")
+                                Text(
+                                    text = "Filtros",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = colorScheme.onSurface
+                                )
+
+                                if (activeFiltersCount > 0) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = colorScheme.primaryContainer
+                                    ) {
+                                        Text(
+                                            text = "$activeFiltersCount activos",
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
+
+                            Text(
+                                text = if (filtersExpanded) "Ocultar" else "Abrir",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colorScheme.primary
+                            )
+                        }
+
+                        if (filtersExpanded) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CompactFilterSelector(
+                                    label = "Orden",
+                                    value = selectedSort,
+                                    options = listOf(SORT_NEWEST, SORT_OLDEST),
+                                    onOptionSelected = { selectedSort = it },
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                CompactFilterSelector(
+                                    label = "Prioridad",
+                                    value = selectedPriority,
+                                    options = listOf(PRIORITY_ALL, PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW),
+                                    onOptionSelected = { selectedPriority = it },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CompactFilterSelector(
+                                    label = "Tipo",
+                                    value = selectedType,
+                                    options = listOf(TYPE_ALL, TYPE_AVERIA, TYPE_INSTALLATION),
+                                    onOptionSelected = { selectedType = it },
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                TextButton(
+                                    onClick = {
+                                        selectedSort = SORT_NEWEST
+                                        selectedPriority = PRIORITY_ALL
+                                        selectedType = TYPE_ALL
+                                    }
+                                ) {
+                                    Text("Limpiar")
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "${filteredEvents.size} eventos disponibles",
-                color = colorScheme.onSurfaceVariant
-            )
+                Text(
+                    text = "${filteredEvents.size} eventos disponibles",
+                    color = colorScheme.onSurfaceVariant
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(4.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                items(filteredEvents) { event ->
-                    val client = event.clienteId?.let { clientsMap[it] }
-                    val prioridadColor = when (event.prioridad.uppercase()) {
-                        "ALTA" -> RojoAlto
-                        "MEDIA" -> AmarilloMedio
-                        "BAJA" -> CelesteBajo
-                        else -> colorScheme.outline
-                    }
-
-                    EventCard(
-                        tipo = event.tipoEvento,
-                        descripcion = event.descripcion,
-                        estado = event.estadoEvento,
-                        prioridad = event.prioridad,
-                        fecha = event.fechaCreacion,
-                        idEvento = event.idEvento,
-                        nombreCliente = client?.nombresApellidos,
-                        direccionCliente = client?.direccion,
-                        leftStripeColor = prioridadColor,
-                        onClick = {
-                            navController.navigate(
-                                Screen.TechnicianEventDetail.createRoute(event.idEvento)
-                            )
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(filteredEvents) { event ->
+                        val client = event.clienteId?.let { clientsMap[it] }
+                        val prioridadColor = when (event.prioridad.uppercase()) {
+                            "ALTA" -> RojoAlto
+                            "MEDIA" -> AmarilloMedio
+                            "BAJA" -> CelesteBajo
+                            else -> colorScheme.outline
                         }
-                    )
+
+                        EventCard(
+                            tipo = event.tipoEvento,
+                            descripcion = event.descripcion,
+                            estado = event.estadoEvento,
+                            prioridad = event.prioridad,
+                            fecha = event.fechaCreacion,
+                            idEvento = event.idEvento,
+                            nombreCliente = client?.nombresApellidos,
+                            direccionCliente = client?.direccion,
+                            leftStripeColor = prioridadColor,
+                            onClick = {
+                                navController.navigate(
+                                    Screen.TechnicianEventDetail.createRoute(event.idEvento)
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }

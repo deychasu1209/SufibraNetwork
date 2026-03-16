@@ -45,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
+import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
@@ -143,36 +144,37 @@ fun TechnicianCurrentJobScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Mi trabajo actual",
-                style = MaterialTheme.typography.headlineMedium,
-                color = colorScheme.onSurface
+            BackTopBar(
+                title = "Mi trabajo actual",
+                navController = navController
             )
 
-            Text(
-                text = "Aqui puedes revisar el evento que tienes asignado y continuar el flujo segun su estado.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onSurfaceVariant
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Aqui puedes revisar el evento que tienes asignado y continuar el flujo segun su estado.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colorScheme.onSurfaceVariant
+                )
 
-            if (currentEvent == null) {
-                CurrentJobEmptyState()
-                Spacer(modifier = Modifier.height(8.dp))
-            } else {
-                val event = currentEvent!!
-                val estadoColor = when (event.estadoEvento) {
-                    "DISPONIBLE" -> AzulPrincipal
-                    "TOMADO" -> NaranjaTomado
-                    "EN PROCESO" -> Turquesa
-                    "FINALIZADO" -> VerdeFinalizado
-                    else -> colorScheme.outline
-                }
+                if (currentEvent == null) {
+                    CurrentJobEmptyState()
+                    Spacer(modifier = Modifier.height(8.dp))
+                } else {
+                    val event = currentEvent!!
+                    val estadoColor = when (event.estadoEvento) {
+                        "DISPONIBLE" -> AzulPrincipal
+                        "TOMADO" -> NaranjaTomado
+                        "EN PROCESO" -> Turquesa
+                        "FINALIZADO" -> VerdeFinalizado
+                        else -> colorScheme.outline
+                    }
 
                 val prioridadColor = when (event.prioridad.uppercase()) {
                     "ALTA" -> RojoAlto
@@ -492,6 +494,7 @@ fun TechnicianCurrentJobScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
     }
 
     if (showStartDialog && currentEvent != null) {

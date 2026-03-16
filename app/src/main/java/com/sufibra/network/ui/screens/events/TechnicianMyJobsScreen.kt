@@ -33,6 +33,7 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
 import com.sufibra.network.domain.model.Event
+import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.VerdeFinalizado
@@ -76,69 +77,72 @@ fun TechnicianMyJobsScreen(
             TechnicianNavigationBar(navController)
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.padding(paddingValues),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxWidth()
         ) {
-            item {
-                Text(
-                    text = "Mis trabajos",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = colorScheme.onSurface
-                )
-            }
+            BackTopBar(
+                title = "Mis trabajos",
+                navController = navController
+            )
 
-            item {
-                Text(
-                    text = "Sigue tu trabajo actual y revisa el historial de eventos finalizados.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colorScheme.onSurfaceVariant
-                )
-            }
-
-            item {
-                JobsSectionHeader(
-                    title = "ACTIVO",
-                    accent = currentEvent != null
-                )
-            }
-
-            item {
-                if (currentEvent != null) {
-                    TechnicianActiveJobHeroCard(
-                        event = currentEvent!!,
-                        clientName = activeClient?.nombresApellidos,
-                        clientAddress = activeClient?.direccion,
-                        onContinueClick = {
-                            navController.navigate(Screen.TechnicianCurrentJob.route)
-                        }
-                    )
-                } else {
-                    TechnicianActiveJobsEmptyCard()
-                }
-            }
-
-            item {
-                JobsSectionHeader(
-                    title = "HISTORIAL",
-                    subtitle = if (historyEvents.isEmpty()) "Sin eventos finalizados aun" else "${historyEvents.size} eventos finalizados",
-                    accent = historyEvents.isNotEmpty()
-                )
-            }
-
-            if (historyEvents.isEmpty()) {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 item {
-                    JobsHistoryEmptyCard()
-                }
-            } else {
-                items(historyEvents) { event ->
-                    val client = event.clienteId?.let { clientsMap[it] }
-                    HistoryJobCard(
-                        event = event,
-                        clientName = client?.nombresApellidos,
-                        clientAddress = client?.direccion
+                    Text(
+                        text = "Sigue tu trabajo actual y revisa el historial de eventos finalizados.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colorScheme.onSurfaceVariant
                     )
+                }
+
+                item {
+                    JobsSectionHeader(
+                        title = "ACTIVO",
+                        accent = currentEvent != null
+                    )
+                }
+
+                item {
+                    if (currentEvent != null) {
+                        TechnicianActiveJobHeroCard(
+                            event = currentEvent!!,
+                            clientName = activeClient?.nombresApellidos,
+                            clientAddress = activeClient?.direccion,
+                            onContinueClick = {
+                                navController.navigate(Screen.TechnicianCurrentJob.route)
+                            }
+                        )
+                    } else {
+                        TechnicianActiveJobsEmptyCard()
+                    }
+                }
+
+                item {
+                    JobsSectionHeader(
+                        title = "HISTORIAL",
+                        subtitle = if (historyEvents.isEmpty()) "Sin eventos finalizados aun" else "${historyEvents.size} eventos finalizados",
+                        accent = historyEvents.isNotEmpty()
+                    )
+                }
+
+                if (historyEvents.isEmpty()) {
+                    item {
+                        JobsHistoryEmptyCard()
+                    }
+                } else {
+                    items(historyEvents) { event ->
+                        val client = event.clienteId?.let { clientsMap[it] }
+                        HistoryJobCard(
+                            event = event,
+                            clientName = client?.nombresApellidos,
+                            clientAddress = client?.direccion
+                        )
+                    }
                 }
             }
         }
