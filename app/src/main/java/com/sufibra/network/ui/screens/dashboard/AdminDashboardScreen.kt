@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.screens.dashboard
+﻿package com.sufibra.network.ui.screens.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -109,7 +109,8 @@ fun AdminDashboardScreen(navController: NavController) {
                 onClick = {
                     sessionViewModel.logout()
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.AdminDashboard.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -217,4 +218,7 @@ fun ModuleCard(
         }
     }
 }
+
+
+
 
