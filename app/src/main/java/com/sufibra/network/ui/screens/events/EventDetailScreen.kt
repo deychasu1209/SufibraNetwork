@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -96,6 +98,7 @@ fun EventDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
 
                 if (isLoading) {
@@ -284,6 +287,13 @@ fun EventDetailScreen(
                                             Text("Referencia: ${client!!.referencia}", color = colorScheme.onSurface)
                                             Text("Caja NAP: ${client!!.cajaNAP}", color = colorScheme.onSurface)
                                             Text("Puerto NAP: ${client!!.puertoNAP}", color = colorScheme.onSurface)
+
+                                            Spacer(modifier = Modifier.height(12.dp))
+
+                                            ClientFacadePhotoSection(
+                                                photoUrl = client!!.fotoFachada,
+                                                accentColor = estadoColor
+                                            )
 
                                             Spacer(modifier = Modifier.height(16.dp))
 

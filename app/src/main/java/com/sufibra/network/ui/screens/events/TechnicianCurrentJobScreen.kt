@@ -368,6 +368,13 @@ fun TechnicianCurrentJobScreen(
                                     Text("Caja NAP: ${client!!.cajaNAP}", color = colorScheme.onSurface)
                                     Text("Puerto NAP: ${client!!.puertoNAP}", color = colorScheme.onSurface)
 
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    ClientFacadePhotoSection(
+                                        photoUrl = client!!.fotoFachada,
+                                        accentColor = estadoColor
+                                    )
+
                                     Spacer(modifier = Modifier.height(16.dp))
 
                                     Surface(
