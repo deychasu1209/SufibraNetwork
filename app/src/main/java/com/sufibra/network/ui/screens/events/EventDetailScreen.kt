@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.screens.events
+﻿package com.sufibra.network.ui.screens.events
 
 import android.content.Intent
 import android.net.Uri
@@ -180,12 +180,12 @@ fun EventDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
 
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    Column(
+                                        horizontalAlignment = Alignment.End,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
 
                                         StatusBadge(e.estadoEvento, estadoColor)
-
                                         StatusBadge(e.prioridad, prioridadColor)
                                     }
                                 }
@@ -494,5 +494,6 @@ fun StatusBadge(text: String, backgroundColor: Color) {
         )
     }
 }
+
 
 

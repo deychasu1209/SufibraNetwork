@@ -224,8 +224,9 @@ fun TechnicianEventDetailScreen(
 
                                 Spacer(modifier = Modifier.weight(1f))
 
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                Column(
+                                    horizontalAlignment = Alignment.End,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     StatusBadge(event.estadoEvento, estadoColor)
                                     StatusBadge(event.prioridad, prioridadColor)
@@ -541,4 +542,5 @@ fun TechnicianEventDetailScreen(
         }
     }
 }
+
 
