@@ -103,13 +103,28 @@ fun TechnicianCurrentJobScreen(
         else -> null
     }
 
+    val actionIcon = when (currentEvent?.estadoEvento) {
+        "TOMADO" -> R.drawable.ic_iniciar
+        "EN PROCESO" -> R.drawable.ic_finalizar
+        else -> null
+    }
+
+    val actionColor = when (currentEvent?.estadoEvento) {
+        "TOMADO" -> Turquesa
+        "EN PROCESO" -> VerdeFinalizado
+        else -> null
+    }
+
     Scaffold(
         containerColor = colorScheme.background,
         bottomBar = {
             Column {
-                if (currentEvent != null && actionText != null) {
+                if (currentEvent != null && actionText != null && actionIcon != null && actionColor != null) {
                     TechnicianStickyActionBar(
                         buttonText = actionText,
+                        iconResId = actionIcon,
+                        containerColor = actionColor,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         onClick = {
                             when (currentEvent!!.estadoEvento) {
                                 "TOMADO" -> showStartDialog = true

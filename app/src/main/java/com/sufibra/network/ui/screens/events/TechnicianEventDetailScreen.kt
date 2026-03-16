@@ -108,6 +108,9 @@ fun TechnicianEventDetailScreen(
                 if (showTakeAction) {
                     TechnicianStickyActionBar(
                         buttonText = "Tomar trabajo",
+                        iconResId = R.drawable.ic_tomar,
+                        containerColor = NaranjaTomado,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         onClick = {
                             showTakeEventDialog = true
                         }
