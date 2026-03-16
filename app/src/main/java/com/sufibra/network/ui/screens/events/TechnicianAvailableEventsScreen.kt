@@ -35,6 +35,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sufibra.network.ui.components.navigation.TechnicianBaseScreen
 import com.sufibra.network.ui.navigation.Screen
+import com.sufibra.network.ui.theme.AmarilloMedio
+import com.sufibra.network.ui.theme.CelesteBajo
+import com.sufibra.network.ui.theme.RojoAlto
 import com.sufibra.network.viewmodel.EventViewModel
 
 private const val SORT_NEWEST = "Mas recientes"
@@ -234,6 +237,12 @@ fun TechnicianAvailableEventsScreen(navController: NavController) {
             ) {
                 items(filteredEvents) { event ->
                     val client = event.clienteId?.let { clientsMap[it] }
+                    val prioridadColor = when (event.prioridad.uppercase()) {
+                        "ALTA" -> RojoAlto
+                        "MEDIA" -> AmarilloMedio
+                        "BAJA" -> CelesteBajo
+                        else -> colorScheme.outline
+                    }
 
                     EventCard(
                         tipo = event.tipoEvento,
@@ -244,6 +253,7 @@ fun TechnicianAvailableEventsScreen(navController: NavController) {
                         idEvento = event.idEvento,
                         nombreCliente = client?.nombresApellidos,
                         direccionCliente = client?.direccion,
+                        leftStripeColor = prioridadColor,
                         onClick = {
                             navController.navigate(
                                 Screen.TechnicianEventDetail.createRoute(event.idEvento)

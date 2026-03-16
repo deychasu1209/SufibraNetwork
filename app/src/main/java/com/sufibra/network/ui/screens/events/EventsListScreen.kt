@@ -175,6 +175,7 @@ fun EventCard(
     idEvento: String,
     nombreCliente: String?,
     direccionCliente: String?,
+    leftStripeColor: Color? = null,
     onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -193,6 +194,7 @@ fun EventCard(
         "BAJA" -> CelesteBajo
         else -> colorScheme.outline
     }
+    val resolvedLeftStripeColor = leftStripeColor ?: estadoColor
 
     val iconTipo = if (tipo.uppercase() == "AVERIA")
         R.drawable.ic_averia
@@ -225,7 +227,7 @@ fun EventCard(
                 modifier = Modifier
                     .width(6.dp)
                     .fillMaxHeight()
-                    .background(estadoColor)
+                    .background(resolvedLeftStripeColor)
             )
 
             Column(
