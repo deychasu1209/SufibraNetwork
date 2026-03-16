@@ -13,6 +13,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
 import com.sufibra.network.R
@@ -21,7 +22,9 @@ import com.sufibra.network.R
 @Composable
 fun BackTopBar(
     title: String,
-    navController: NavController
+    navController: NavController,
+    navigationIconTint: Color = MaterialTheme.colorScheme.onSurface,
+    navigationIconContainerColor: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
     val colorScheme = MaterialTheme.colorScheme
 
@@ -32,12 +35,12 @@ fun BackTopBar(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(colorScheme.surfaceVariant)
+                    .background(navigationIconContainerColor)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_atras),
                     contentDescription = "Volver",
-                    tint = colorScheme.onSurface
+                    tint = navigationIconTint
                 )
             }
         },

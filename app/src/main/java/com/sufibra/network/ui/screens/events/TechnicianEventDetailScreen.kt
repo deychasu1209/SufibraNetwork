@@ -93,6 +93,13 @@ fun TechnicianEventDetailScreen(
 
     val event = events.find { it.idEvento == eventId }
     val showTakeAction = event?.estadoEvento == "DISPONIBLE"
+    val stateAccentColor = when (event?.estadoEvento) {
+        "DISPONIBLE" -> AzulPrincipal
+        "TOMADO" -> NaranjaTomado
+        "EN PROCESO" -> Turquesa
+        "FINALIZADO" -> VerdeFinalizado
+        else -> colorScheme.onSurface
+    }
 
     LaunchedEffect(event?.idEvento) {
         clientExpanded = false
@@ -127,7 +134,9 @@ fun TechnicianEventDetailScreen(
         ) {
             BackTopBar(
                 title = "Detalle del Evento",
-                navController = navController
+                navController = navController,
+                navigationIconTint = stateAccentColor,
+                navigationIconContainerColor = stateAccentColor.copy(alpha = 0.14f)
             )
 
             Column(
@@ -184,12 +193,6 @@ fun TechnicianEventDetailScreen(
                         R.drawable.ic_instalacion
                     }
 
-                    val colorTipo = if (event.tipoEvento.uppercase() == "AVERIA") {
-                        RojoAlto
-                    } else {
-                        AzulPrincipal
-                    }
-
                     Text(
                         text = "Revisa la informacion del evento antes de tomarlo.",
                         style = MaterialTheme.typography.bodyMedium,
@@ -232,7 +235,7 @@ fun TechnicianEventDetailScreen(
                                     Icon(
                                         painter = painterResource(iconTipo),
                                         contentDescription = null,
-                                        tint = colorTipo
+                                        tint = estadoColor
                                     )
                                 }
 
@@ -286,7 +289,7 @@ fun TechnicianEventDetailScreen(
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_persona),
                                                 contentDescription = null,
-                                                tint = colorScheme.onSurfaceVariant
+                                                tint = estadoColor
                                             )
 
                                             Spacer(modifier = Modifier.width(6.dp))
@@ -304,7 +307,7 @@ fun TechnicianEventDetailScreen(
                                             Icon(
                                                 painter = painterResource(R.drawable.ic_ubicacion),
                                                 contentDescription = null,
-                                                tint = colorScheme.onSurfaceVariant
+                                                tint = estadoColor
                                             )
 
                                             Spacer(modifier = Modifier.width(6.dp))
@@ -359,7 +362,7 @@ fun TechnicianEventDetailScreen(
                                                 Icon(
                                                     painter = painterResource(id = R.drawable.ic_ubicacion),
                                                     contentDescription = "Ubicacion",
-                                                    tint = colorScheme.onPrimaryContainer
+                                                    tint = estadoColor
                                                 )
 
                                                 Spacer(modifier = Modifier.width(10.dp))
@@ -430,7 +433,7 @@ fun TechnicianEventDetailScreen(
                                     painter = painterResource(R.drawable.ic_fecha),
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp),
-                                    tint = colorScheme.onSurfaceVariant
+                                    tint = estadoColor
                                 )
 
                                 Spacer(modifier = Modifier.width(8.dp))

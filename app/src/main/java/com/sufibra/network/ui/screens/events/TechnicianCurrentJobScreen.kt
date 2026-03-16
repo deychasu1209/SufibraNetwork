@@ -116,6 +116,14 @@ fun TechnicianCurrentJobScreen(
         else -> null
     }
 
+    val stateAccentColor = when (currentEvent?.estadoEvento) {
+        "DISPONIBLE" -> AzulPrincipal
+        "TOMADO" -> NaranjaTomado
+        "EN PROCESO" -> Turquesa
+        "FINALIZADO" -> VerdeFinalizado
+        else -> colorScheme.onSurface
+    }
+
     Scaffold(
         containerColor = colorScheme.background,
         bottomBar = {
@@ -147,7 +155,9 @@ fun TechnicianCurrentJobScreen(
         ) {
             BackTopBar(
                 title = "Mi trabajo actual",
-                navController = navController
+                navController = navController,
+                navigationIconTint = stateAccentColor,
+                navigationIconContainerColor = stateAccentColor.copy(alpha = 0.14f)
             )
 
             Column(
@@ -187,12 +197,6 @@ fun TechnicianCurrentJobScreen(
                     R.drawable.ic_averia
                 } else {
                     R.drawable.ic_instalacion
-                }
-
-                val colorTipo = if (event.tipoEvento.uppercase() == "AVERIA") {
-                    RojoAlto
-                } else {
-                    AzulPrincipal
                 }
 
                 Surface(
@@ -258,7 +262,7 @@ fun TechnicianCurrentJobScreen(
                                 Icon(
                                     painter = painterResource(iconTipo),
                                     contentDescription = null,
-                                    tint = colorTipo
+                                    tint = estadoColor
                                 )
                             }
 
@@ -312,7 +316,7 @@ fun TechnicianCurrentJobScreen(
                                         Icon(
                                             painter = painterResource(R.drawable.ic_persona),
                                             contentDescription = null,
-                                            tint = colorScheme.onSurfaceVariant
+                                            tint = estadoColor
                                         )
 
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -330,7 +334,7 @@ fun TechnicianCurrentJobScreen(
                                         Icon(
                                             painter = painterResource(R.drawable.ic_ubicacion),
                                             contentDescription = null,
-                                            tint = colorScheme.onSurfaceVariant
+                                            tint = estadoColor
                                         )
 
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -384,7 +388,7 @@ fun TechnicianCurrentJobScreen(
                                             Icon(
                                                 painter = painterResource(id = R.drawable.ic_ubicacion),
                                                 contentDescription = "Ubicacion",
-                                                tint = colorScheme.onPrimaryContainer
+                                                tint = estadoColor
                                             )
 
                                             Spacer(modifier = Modifier.width(10.dp))
@@ -451,12 +455,12 @@ fun TechnicianCurrentJobScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_fecha),
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = colorScheme.onSurfaceVariant
-                            )
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_fecha),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = estadoColor
+                                )
 
                             Spacer(modifier = Modifier.width(8.dp))
 
