@@ -1,4 +1,4 @@
-﻿package com.sufibra.network.ui.screens.events
+package com.sufibra.network.ui.screens.events
 
 import android.content.Intent
 import android.net.Uri
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -85,6 +86,7 @@ fun CreateAveriaScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(paddingValues)
         ) {
 
@@ -95,7 +97,7 @@ fun CreateAveriaScreen(navController: NavController) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
 
@@ -169,7 +171,6 @@ fun CreateAveriaScreen(navController: NavController) {
                 }
 
                 if (selectedClient != null) {
-
                     Spacer(modifier = Modifier.height(16.dp))
 
                     ClientDetailAccordion(
@@ -195,13 +196,11 @@ fun CreateAveriaScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-
                         if (selectedClient == null || descripcion.isBlank()) return@Button
 
                         isLoading = true
 
                         scope.launch {
-
                             val currentUser = FirebaseAuth.getInstance().currentUser
 
                             val event = Event(
@@ -223,7 +222,6 @@ fun CreateAveriaScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
                 ) {
-
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp)
@@ -232,6 +230,7 @@ fun CreateAveriaScreen(navController: NavController) {
                         Text("Registrar Avería")
                     }
                 }
+
             }
         }
     }

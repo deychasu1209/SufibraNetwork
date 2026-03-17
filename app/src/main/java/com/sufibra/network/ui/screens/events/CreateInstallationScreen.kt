@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -58,6 +59,7 @@ fun CreateInstallationScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(paddingValues)
         ) {
 
@@ -68,7 +70,7 @@ fun CreateInstallationScreen(navController: NavController) {
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
 
@@ -125,13 +127,11 @@ fun CreateInstallationScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-
                         if (direccion.isBlank()) return@Button
 
                         isLoading = true
 
                         scope.launch {
-
                             val currentUser = FirebaseAuth.getInstance().currentUser
 
                             val descripcionFinal = """
@@ -159,7 +159,6 @@ fun CreateInstallationScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading
                 ) {
-
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp)
@@ -168,8 +167,8 @@ fun CreateInstallationScreen(navController: NavController) {
                         Text("Registrar Instalación")
                     }
                 }
+
             }
         }
     }
 }
-
