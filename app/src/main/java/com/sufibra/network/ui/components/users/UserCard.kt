@@ -91,7 +91,7 @@ fun UserCard(
                                 color = roleAccent.copy(alpha = 0.14f)
                             ) {
                                 Icon(
-                                    painter = painterResource(id = if (user.rol == "ADMIN") R.drawable.ic_perfil else R.drawable.ic_tecnico),
+                                    painter = painterResource(id = if (user.rol == "ADMIN") R.drawable.ic_admin else R.drawable.ic_tecnico),
                                     contentDescription = null,
                                     tint = roleAccent,
                                     modifier = Modifier
