@@ -1,5 +1,6 @@
 package com.sufibra.network.ui.screens.users
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.users.FormIntroCard
+import com.sufibra.network.ui.components.users.UserSectionCard
 import com.sufibra.network.viewmodel.UsersViewModel
 
 @Composable
@@ -36,7 +39,6 @@ fun EditUserScreen(
     navController: NavController,
     userId: String
 ) {
-
     val viewModel: UsersViewModel = viewModel()
     val users by viewModel.users.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
@@ -65,7 +67,6 @@ fun EditUserScreen(
     Scaffold(
         containerColor = colorScheme.background
     ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,55 +74,86 @@ fun EditUserScreen(
                 .imePadding()
                 .padding(paddingValues)
         ) {
-
             BackTopBar(
-                title = "Editar Usuario",
+                title = "Editar usuario",
                 navController = navController,
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                OutlinedTextField(
-                    value = nombres,
-                    onValueChange = { nombres = it },
-                    label = { Text("Nombres") },
-                    modifier = Modifier.fillMaxWidth()
+                FormIntroCard(
+                    title = "Actualiza el perfil",
+                    subtitle = "Mantén al día la información operativa del usuario sin modificar su acceso técnico."
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                UserSectionCard(title = "Datos personales") {
+                    OutlinedTextField(
+                        value = nombres,
+                        onValueChange = { nombres = it },
+                        label = { Text("Nombres") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                OutlinedTextField(
-                    value = apellidos,
-                    onValueChange = { apellidos = it },
-                    label = { Text("Apellidos") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = apellidos,
+                        onValueChange = { apellidos = it },
+                        label = { Text("Apellidos") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                UserSectionCard(title = "Acceso") {
+                    Text(
+                        text = "Las credenciales se muestran solo como referencia y no pueden modificarse desde esta pantalla.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = user.correo,
+                        onValueChange = {},
+                        enabled = false,
+                        label = { Text("Correo") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = "************",
+                        onValueChange = {},
+                        enabled = false,
+                        label = { Text("Contraseña") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 if (user.rol == "TECHNICIAN") {
+                    UserSectionCard(title = "Información operativa") {
+                        OutlinedTextField(
+                            value = telefono,
+                            onValueChange = { telefono = it },
+                            label = { Text("Teléfono") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                    OutlinedTextField(
-                        value = telefono,
-                        onValueChange = { telefono = it },
-                        label = { Text("Teléfono") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = zona,
-                        onValueChange = { zona = it },
-                        label = { Text("Zona asignada") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = zona,
+                            onValueChange = { zona = it },
+                            label = { Text("Zona asignada") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
 
                 Button(
@@ -138,8 +170,10 @@ fun EditUserScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Guardar Cambios")
+                    Text("Guardar cambios")
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }

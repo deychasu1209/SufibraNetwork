@@ -2,12 +2,13 @@ package com.sufibra.network.ui.screens.users
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -15,8 +16,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -26,13 +27,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.sufibra.network.R
 import com.sufibra.network.domain.model.User
 import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
+import com.sufibra.network.ui.components.users.UserCard
+import com.sufibra.network.ui.components.users.UsersEmptyState
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.viewmodel.UsersViewModel
 
@@ -40,191 +46,279 @@ import com.sufibra.network.viewmodel.UsersViewModel
 fun UsersListScreen(
     navController: NavController
 ) {
-
     val viewModel: UsersViewModel = viewModel()
-
     val users by viewModel.users.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
 
     var selectedUser by remember { mutableStateOf<User?>(null) }
     var newStatus by remember { mutableStateOf<Boolean?>(null) }
+    var expandedUserId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadUsers()
     }
 
-    AdminBaseScreen(navController) { padding ->
+    val activeUsers = users.count { it.estado }
+    val technicians = users.count { it.rol == "TECHNICIAN" }
+    val admins = users.count { it.rol == "ADMIN" }
 
+    AdminBaseScreen(navController) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
             BackTopBar(
-                title = "Gestión de Usuarios",
+                title = "Gestión de usuarios",
                 navController = navController,
             )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 24.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.CreateUser.route)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Crear Usuario")
+                item {
+                    UsersHeaderCard(
+                        totalUsers = users.size,
+                        activeUsers = activeUsers,
+                        technicians = technicians,
+                        admins = admins,
+                        onCreateUser = {
+                            navController.navigate(Screen.CreateUser.route)
+                        }
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 if (isLoading) {
-                    CircularProgressIndicator()
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
                 }
 
-                errorMessage?.let {
-                    Text(text = it, color = MaterialTheme.colorScheme.error)
+                errorMessage?.let { message ->
+                    item {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = colorScheme.errorContainer
+                            )
+                        ) {
+                            Text(
+                                text = message,
+                                modifier = Modifier.padding(16.dp),
+                                color = colorScheme.onErrorContainer
+                            )
+                        }
+                    }
                 }
 
-                LazyColumn {
-                    items(users) { user ->
-                        UserItem(
+                if (!isLoading && users.isEmpty()) {
+                    item {
+                        UsersEmptyState(
+                            title = "Aún no hay usuarios registrados",
+                            message = "Crea un administrador o técnico para comenzar a gestionar accesos."
+                        )
+                    }
+                } else {
+                    items(users, key = { it.idUsuario }) { user ->
+                        UserCard(
                             user = user,
-                            navController = navController,
+                            expanded = expandedUserId == user.idUsuario,
+                            onExpandedChange = {
+                                expandedUserId = if (expandedUserId == user.idUsuario) null else user.idUsuario
+                            },
+                            onEdit = {
+                                navController.navigate(Screen.EditUser.createRoute(user.idUsuario))
+                            },
                             onToggleStatus = { status ->
                                 selectedUser = user
                                 newStatus = status
                             }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
+            }
 
-                if (selectedUser != null && newStatus != null) {
+            if (selectedUser != null && newStatus != null) {
+                val targetUser = selectedUser!!
+                val enableUser = newStatus == true
 
-                    AlertDialog(
-                        onDismissRequest = {
-                            selectedUser = null
-                            newStatus = null
-                        },
-                        title = {
-                            Text("Confirmar cambio de estado")
-                        },
-                        text = {
-                            Text(
-                                if (newStatus == true)
-                                    "¿Deseas activar este usuario?"
-                                else
-                                    "¿Deseas desactivar este usuario?"
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    viewModel.updateUserStatus(
-                                        selectedUser!!.idUsuario,
-                                        newStatus!!
-                                    )
-                                    selectedUser = null
-                                    newStatus = null
-                                }
-                            ) {
-                                Text("Confirmar")
+                AlertDialog(
+                    onDismissRequest = {
+                        selectedUser = null
+                        newStatus = null
+                    },
+                    title = {
+                        Text(if (enableUser) "Activar usuario" else "Desactivar usuario")
+                    },
+                    text = {
+                        Text(
+                            if (enableUser) {
+                                "¿Deseas activar a ${targetUser.nombres} ${targetUser.apellidos}?"
+                            } else {
+                                "¿Deseas desactivar a ${targetUser.nombres} ${targetUser.apellidos}?"
                             }
-                        },
-                        dismissButton = {
-                            TextButton(
-                                onClick = {
-                                    selectedUser = null
-                                    newStatus = null
-                                }
-                            ) {
-                                Text("Cancelar")
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.updateUserStatus(
+                                    targetUser.idUsuario,
+                                    newStatus!!
+                                )
+                                selectedUser = null
+                                newStatus = null
                             }
+                        ) {
+                            Text("Confirmar")
                         }
-                    )
-                }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                selectedUser = null
+                                newStatus = null
+                            }
+                        ) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun UserItem(
-    user: User,
-    navController: NavController,
-    onToggleStatus: (Boolean) -> Unit
+private fun UsersHeaderCard(
+    totalUsers: Int,
+    activeUsers: Int,
+    technicians: Int,
+    admins: Int,
+    onCreateUser: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surfaceVariant
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            Text(
-                text = "${user.nombres} ${user.apellidos}",
-                color = colorScheme.onSurface
-            )
-
-            Text(
-                text = "Rol: ${user.rol}",
-                color = colorScheme.onSurfaceVariant
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-
                 Text(
-                    text = if (user.estado) "Activo" else "Inactivo",
-                    color = if (user.estado)
-                        colorScheme.primary
-                    else
-                        colorScheme.error
+                    text = "Equipo y accesos",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colorScheme.onSurface
                 )
 
-                Switch(
-                    checked = user.estado,
-                    onCheckedChange = { newValue ->
-                        onToggleStatus(newValue)
-                    }
-                )
-            }
-
-            if (user.rol == "TECHNICIAN") {
                 Text(
-                    text = "Zona: ${user.zonaAsignada ?: "No asignada"}",
+                    text = "Administra perfiles, estado de acceso y datos operativos del personal.",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = colorScheme.onSurfaceVariant
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    navController.navigate(
-                        Screen.EditUser.createRoute(user.idUsuario)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    UsersStatChip(
+                        label = "Usuarios",
+                        value = totalUsers.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    UsersStatChip(
+                        label = "Activos",
+                        value = activeUsers.toString(),
+                        modifier = Modifier.weight(1f)
                     )
                 }
-            ) {
-                Text("Editar")
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    UsersStatChip(
+                        label = "Técnicos",
+                        value = technicians.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                    UsersStatChip(
+                        label = "Admins",
+                        value = admins.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
+
+            Button(
+                onClick = onCreateUser,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_mas),
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Crear usuario")
+            }
+        }
+    }
+}
+
+@Composable
+private fun UsersStatChip(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                color = colorScheme.onSurface
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = colorScheme.onSurfaceVariant
+            )
         }
     }
 }

@@ -96,7 +96,7 @@ fun CreateAveriaScreen(navController: NavController) {
             )
 
             Column(
-                modifier = Modifier
+                modifier = Modifier 
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
