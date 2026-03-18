@@ -241,8 +241,63 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    fun finalizeInstallationWithClient(
+        eventId: String,
+        solucionAplicada: String,
+        observaciones: String?,
+        client: Client
+    ) {
+
+        viewModelScope.launch {
+
+            if (solucionAplicada.isBlank()) {
+                _errorMessage.value = "La solución aplicada es obligatoria"
+                _finalizeEventSuccess.value = false
+                return@launch
+            }
+
+            val clientValidationError = validateClientForInstallation(client)
+            if (clientValidationError != null) {
+                _errorMessage.value = clientValidationError
+                _finalizeEventSuccess.value = false
+                return@launch
+            }
+
+            val result = repository.finalizeInstallationWithClient(
+                eventId = eventId,
+                solucionAplicada = solucionAplicada,
+                observaciones = observaciones,
+                client = client
+            )
+
+            result.onSuccess {
+                _finalizeEventSuccess.value = true
+            }
+
+            result.onFailure {
+                _errorMessage.value = it.message
+                _finalizeEventSuccess.value = false
+            }
+        }
+    }
+
     fun clearFinalizeEventState() {
         _finalizeEventSuccess.value = null
+    }
+
+    private fun validateClientForInstallation(client: Client): String? {
+        return when {
+            client.nombresApellidos.isBlank() -> "El nombre del cliente es obligatorio"
+            client.dni.isBlank() -> "El DNI es obligatorio"
+            client.dni.any { !it.isDigit() } -> "El DNI debe contener solo números"
+            client.dni.length < 8 -> "El DNI debe tener al menos 8 dígitos"
+            client.celular.isBlank() -> "El celular es obligatorio"
+            client.celular.any { !it.isDigit() } -> "El celular debe contener solo números"
+            client.celular.length < 9 -> "El celular debe tener al menos 9 dígitos"
+            client.direccion.isBlank() -> "La dirección es obligatoria"
+            client.zona.isBlank() -> "La zona es obligatoria"
+            else -> null
+        }
     }
 
 }

@@ -2,6 +2,7 @@ package com.sufibra.network.data.repository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import com.sufibra.network.domain.model.Client
 import com.sufibra.network.domain.model.Event
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.Query
@@ -132,6 +133,41 @@ class EventRepository {
                     "observaciones" to observaciones
                 )
             ).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun finalizeInstallationWithClient(
+        eventId: String,
+        solucionAplicada: String,
+        observaciones: String?,
+        client: Client
+    ): Result<Unit> {
+        return try {
+            val now = System.currentTimeMillis()
+            val clientDoc = firestore.collection("clients").document()
+            val clientToSave = client.copy(
+                idCliente = clientDoc.id,
+                estadoCliente = true,
+                fechaRegistro = now
+            )
+
+            firestore.batch().apply {
+                set(clientDoc, clientToSave)
+                update(
+                    eventsCollection.document(eventId),
+                    mapOf(
+                        "estadoEvento" to "FINALIZADO",
+                        "fechaFinalizacion" to now,
+                        "solucionAplicada" to solucionAplicada,
+                        "observaciones" to observaciones,
+                        "clienteId" to clientDoc.id
+                    )
+                )
+            }.commit().await()
 
             Result.success(Unit)
         } catch (e: Exception) {
