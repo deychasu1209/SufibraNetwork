@@ -44,11 +44,13 @@ fun TechnicianActiveJobHeroCard(
     clientAddress: String?,
     onContinueClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     val estadoColor = when (event.estadoEvento) {
         "DISPONIBLE" -> AzulPrincipal
         "TOMADO" -> NaranjaTomado
         "EN PROCESO" -> Turquesa
         "FINALIZADO" -> VerdeFinalizado
+        "CANCELADO" -> colorScheme.outline
         else -> Color.White.copy(alpha = 0.30f)
     }
 

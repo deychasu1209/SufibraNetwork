@@ -121,6 +121,7 @@ fun TechnicianCurrentJobScreen(
         "TOMADO" -> NaranjaTomado
         "EN PROCESO" -> Turquesa
         "FINALIZADO" -> VerdeFinalizado
+        "CANCELADO" -> colorScheme.outline
         else -> colorScheme.onSurface
     }
 
@@ -183,6 +184,7 @@ fun TechnicianCurrentJobScreen(
                         "TOMADO" -> NaranjaTomado
                         "EN PROCESO" -> Turquesa
                         "FINALIZADO" -> VerdeFinalizado
+                        "CANCELADO" -> colorScheme.outline
                         else -> colorScheme.outline
                     }
 

@@ -185,6 +185,7 @@ fun EventCard(
         "EN PROCESO" -> Turquesa
         "TOMADO" -> NaranjaTomado
         "FINALIZADO" -> VerdeFinalizado
+        "CANCELADO" -> colorScheme.outline
         else -> colorScheme.outline
     }
 

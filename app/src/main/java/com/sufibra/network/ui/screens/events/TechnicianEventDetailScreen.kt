@@ -98,6 +98,7 @@ fun TechnicianEventDetailScreen(
         "TOMADO" -> NaranjaTomado
         "EN PROCESO" -> Turquesa
         "FINALIZADO" -> VerdeFinalizado
+        "CANCELADO" -> colorScheme.outline
         else -> colorScheme.onSurface
     }
 
@@ -177,6 +178,7 @@ fun TechnicianEventDetailScreen(
                         "TOMADO" -> NaranjaTomado
                         "EN PROCESO" -> Turquesa
                         "FINALIZADO" -> VerdeFinalizado
+                        "CANCELADO" -> colorScheme.outline
                         else -> colorScheme.outline
                     }
 

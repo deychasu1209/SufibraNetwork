@@ -3,6 +3,7 @@ package com.sufibra.network.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.data.repository.ClientRepository
 import com.sufibra.network.data.repository.EventRepository
 import com.sufibra.network.data.repository.UserRepository
@@ -33,6 +34,12 @@ class EventViewModel : ViewModel() {
 
     private val _startEventSuccess = MutableStateFlow<Boolean?>(null)
     val startEventSuccess: StateFlow<Boolean?> = _startEventSuccess
+
+    private val _updateEventSuccess = MutableStateFlow<Boolean?>(null)
+    val updateEventSuccess: StateFlow<Boolean?> = _updateEventSuccess
+
+    private val _cancelEventSuccess = MutableStateFlow<Boolean?>(null)
+    val cancelEventSuccess: StateFlow<Boolean?> = _cancelEventSuccess
 
     suspend fun createEvent(event: Event): Result<Unit> {
         return repository.createEvent(event)
@@ -283,6 +290,90 @@ class EventViewModel : ViewModel() {
 
     fun clearFinalizeEventState() {
         _finalizeEventSuccess.value = null
+    }
+
+    fun updateEvent(
+        eventId: String,
+        descripcion: String,
+        prioridad: String
+    ) {
+        viewModelScope.launch {
+
+            if (descripcion.isBlank()) {
+                _errorMessage.value = "La descripción es obligatoria"
+                _updateEventSuccess.value = false
+                return@launch
+            }
+
+            if (prioridad !in listOf("ALTA", "MEDIA", "BAJA")) {
+                _errorMessage.value = "Selecciona una prioridad válida"
+                _updateEventSuccess.value = false
+                return@launch
+            }
+
+            _isLoading.value = true
+
+            val result = repository.updateEventEditableFields(
+                eventId = eventId,
+                descripcion = descripcion,
+                prioridad = prioridad
+            )
+
+            result.onSuccess {
+                _updateEventSuccess.value = true
+                loadEventById(eventId)
+                loadEvents()
+                loadAvailableEvents()
+            }
+
+            result.onFailure {
+                _errorMessage.value = it.message
+                _updateEventSuccess.value = false
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    fun cancelEvent(eventId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val adminId = FirebaseAuth.getInstance().currentUser?.uid
+            if (adminId.isNullOrBlank()) {
+                _errorMessage.value = "No se pudo identificar al administrador que cancela el evento"
+                _cancelEventSuccess.value = false
+                _isLoading.value = false
+                return@launch
+            }
+
+            val result = repository.cancelEvent(
+                eventId = eventId,
+                canceladoPor = adminId
+            )
+
+            result.onSuccess {
+                _cancelEventSuccess.value = true
+                loadEventById(eventId)
+                loadEvents()
+                loadAvailableEvents()
+            }
+
+            result.onFailure {
+                _errorMessage.value = it.message
+                _cancelEventSuccess.value = false
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    fun clearUpdateEventState() {
+        _updateEventSuccess.value = null
+    }
+
+    fun clearCancelEventState() {
+        _cancelEventSuccess.value = null
     }
 
     private fun validateClientForInstallation(client: Client): String? {

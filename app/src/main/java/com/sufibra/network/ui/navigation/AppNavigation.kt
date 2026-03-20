@@ -14,6 +14,7 @@ import com.sufibra.network.ui.screens.clients.CreateClientScreen
 import com.sufibra.network.ui.screens.clients.EditClientScreen
 import com.sufibra.network.ui.screens.events.CreateAveriaScreen
 import com.sufibra.network.ui.screens.events.CreateInstallationScreen
+import com.sufibra.network.ui.screens.events.EditEventScreen
 import com.sufibra.network.ui.screens.events.EventDetailScreen
 import com.sufibra.network.ui.screens.events.EventsListScreen
 import com.sufibra.network.ui.screens.events.FinalizeEventScreen
@@ -136,6 +137,21 @@ fun AppNavigation() {
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
 
             EventDetailScreen(
+                navController = navController,
+                eventId = eventId
+            )
+        }
+
+        composable(
+            route = Screen.EditEvent.route,
+            arguments = listOf(
+                navArgument("eventId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+
+            EditEventScreen(
                 navController = navController,
                 eventId = eventId
             )

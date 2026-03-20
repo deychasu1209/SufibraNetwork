@@ -19,14 +19,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,6 +50,7 @@ import androidx.navigation.NavController
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
+import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
 import com.sufibra.network.ui.theme.AzulPrincipal
 import com.sufibra.network.ui.theme.CelesteBajo
@@ -70,7 +75,9 @@ fun EventDetailScreen(
     var clientExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val technician by viewModel.assignedTechnician.collectAsState()
+    val cancelEventSuccess by viewModel.cancelEventSuccess.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+    var showCancelDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         viewModel.loadEventById(eventId)
@@ -78,6 +85,12 @@ fun EventDetailScreen(
     LaunchedEffect(event) {
         if (event?.tipoEvento == "AVERIA" && event?.clienteId != null) {
             viewModel.loadClientForEvent(event!!.clienteId!!)
+        }
+    }
+    LaunchedEffect(cancelEventSuccess) {
+        if (cancelEventSuccess == true) {
+            viewModel.clearCancelEventState()
+            showCancelDialog = false
         }
     }
 
@@ -112,6 +125,7 @@ fun EventDetailScreen(
                             "TOMADO" -> NaranjaTomado
                             "EN PROCESO" -> Turquesa
                             "FINALIZADO" -> VerdeFinalizado
+                            "CANCELADO" -> colorScheme.outline
                             else -> colorScheme.outline
                         }
 
@@ -190,6 +204,73 @@ fun EventDetailScreen(
 
                                         StatusBadge(e.estadoEvento, estadoColor)
                                         StatusBadge(e.prioridad, prioridadColor)
+                                    }
+                                }
+                            }
+                        }
+
+                        val canEditEvent = e.estadoEvento == "DISPONIBLE"
+                        val canCancelEvent = e.estadoEvento == "DISPONIBLE" || e.estadoEvento == "TOMADO"
+
+                        if (canEditEvent || canCancelEvent) {
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = colorScheme.surfaceVariant
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 4.dp
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = "ACCIONES ADMINISTRATIVAS",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = colorScheme.onSurfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = if (canEditEvent) {
+                                            "Este evento aún puede ajustarse o cancelarse antes de que avance el flujo operativo."
+                                        } else {
+                                            "Este evento ya no puede editarse, pero todavía puede cancelarse porque no inició ejecución."
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colorScheme.onSurfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        if (canEditEvent) {
+                                            Button(
+                                                onClick = {
+                                                    navController.navigate(Screen.EditEvent.createRoute(e.idEvento))
+                                                },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Editar evento")
+                                            }
+                                        }
+
+                                        if (canCancelEvent) {
+                                            OutlinedButton(
+                                                onClick = { showCancelDialog = true },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Text("Cancelar evento")
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -445,6 +526,29 @@ fun EventDetailScreen(
                                         color = colorScheme.onSurfaceVariant
                                     )
                                 }
+
+                                if (e.fechaCancelacion != null) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_fecha),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = colorScheme.onSurfaceVariant
+                                        )
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Text(
+                                            text = "Fecha de cancelación: ${formatDate(e.fechaCancelacion)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -475,6 +579,34 @@ fun EventDetailScreen(
                 }
             }
         }
+    }
+
+    if (showCancelDialog && event != null) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = {
+                Text("Cancelar evento")
+            },
+            text = {
+                Text("¿Deseas cancelar este evento? El registro se conservará para trazabilidad y pasará a estado CANCELADO.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.cancelEvent(event!!.idEvento)
+                    }
+                ) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCancelDialog = false }
+                ) {
+                    Text("Volver")
+                }
+            }
+        )
     }
 }
 

@@ -1,6 +1,5 @@
 package com.sufibra.network.data.repository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sufibra.network.domain.model.Client
 import com.sufibra.network.domain.model.Event
@@ -168,6 +167,66 @@ class EventRepository {
                     )
                 )
             }.commit().await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateEventEditableFields(
+        eventId: String,
+        descripcion: String,
+        prioridad: String
+    ): Result<Unit> {
+        return try {
+            firestore.runTransaction { transaction ->
+                val eventRef = eventsCollection.document(eventId)
+                val snapshot = transaction.get(eventRef)
+                val currentState = snapshot.getString("estadoEvento")
+
+                if (currentState != "DISPONIBLE") {
+                    throw IllegalStateException("Solo se pueden editar eventos en estado DISPONIBLE")
+                }
+
+                transaction.update(
+                    eventRef,
+                    mapOf(
+                        "descripcion" to descripcion,
+                        "prioridad" to prioridad
+                    )
+                )
+            }.await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun cancelEvent(
+        eventId: String,
+        canceladoPor: String
+    ): Result<Unit> {
+        return try {
+            firestore.runTransaction { transaction ->
+                val eventRef = eventsCollection.document(eventId)
+                val snapshot = transaction.get(eventRef)
+                val currentState = snapshot.getString("estadoEvento")
+
+                if (currentState !in listOf("DISPONIBLE", "TOMADO")) {
+                    throw IllegalStateException("Solo se pueden cancelar eventos en estado DISPONIBLE o TOMADO")
+                }
+
+                transaction.update(
+                    eventRef,
+                    mapOf(
+                        "estadoEvento" to "CANCELADO",
+                        "fechaCancelacion" to System.currentTimeMillis(),
+                        "canceladoPor" to canceladoPor
+                    )
+                )
+            }.await()
 
             Result.success(Unit)
         } catch (e: Exception) {
