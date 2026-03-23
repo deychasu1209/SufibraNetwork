@@ -16,6 +16,9 @@ import com.sufibra.network.ui.navigation.Screen
 fun TechnicianNavigationBar(navController: NavController) {
     val currentRoute = navController.currentBackStackEntry?.destination?.route
     val colorScheme = MaterialTheme.colorScheme
+    val profileModuleSelected = currentRoute == Screen.Profile.route ||
+        currentRoute == Screen.EditProfile.route ||
+        currentRoute == Screen.ChangePassword.route
     val itemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = colorScheme.primary,
         selectedTextColor = colorScheme.primary,
@@ -75,8 +78,10 @@ fun TechnicianNavigationBar(navController: NavController) {
         )
 
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = profileModuleSelected,
+            onClick = {
+                navController.navigate(Screen.Profile.route)
+            },
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_perfil),

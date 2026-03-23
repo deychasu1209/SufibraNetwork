@@ -23,6 +23,10 @@ sealed class Screen(val route: String) {
         fun createRoute(userId: String) = "edit_user/$userId"
     }
 
+    object Profile : Screen("profile")
+    object EditProfile : Screen("edit_profile")
+    object ChangePassword : Screen("change_password")
+
     object EventsList : Screen("events_list")
     object CreateInstallation : Screen("create_installation")
     object CreateAveria : Screen("create_averia")

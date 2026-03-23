@@ -19,6 +19,9 @@ fun AdminNavigationBar(navController: NavController) {
     val clientsModuleSelected = currentRoute == Screen.ClientsList.route ||
         currentRoute == Screen.CreateClient.route ||
         currentRoute == Screen.EditClient.route
+    val profileModuleSelected = currentRoute == Screen.Profile.route ||
+        currentRoute == Screen.EditProfile.route ||
+        currentRoute == Screen.ChangePassword.route
     val itemColors = NavigationBarItemDefaults.colors(
         selectedIconColor = colorScheme.primary,
         selectedTextColor = colorScheme.primary,
@@ -93,8 +96,10 @@ fun AdminNavigationBar(navController: NavController) {
         )
 
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = profileModuleSelected,
+            onClick = {
+                navController.navigate(Screen.Profile.route)
+            },
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_perfil),

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.ui.components.navigation.TechnicianBaseScreen
@@ -33,12 +31,10 @@ import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.screens.events.TechnicianActiveJobHeroCard
 import com.sufibra.network.ui.screens.events.TechnicianActiveJobsEmptyCard
 import com.sufibra.network.viewmodel.EventViewModel
-import com.sufibra.network.viewmodel.SessionViewModel
 
 @Composable
 fun TechnicianDashboardScreen(navController: NavController) {
-    val sessionViewModel: SessionViewModel = viewModel()
-    val eventViewModel: EventViewModel = viewModel()
+    val eventViewModel: EventViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val currentEvent by eventViewModel.currentTechnicianEvent.collectAsState()
     val availableEvents by eventViewModel.availableEvents.collectAsState()
     val clients by eventViewModel.clients.collectAsState()
@@ -133,21 +129,6 @@ fun TechnicianDashboardScreen(navController: NavController) {
                     navController.navigate(Screen.TechnicianMyJobs.route)
                 }
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    sessionViewModel.logout()
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(0) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cerrar Sesión")
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }

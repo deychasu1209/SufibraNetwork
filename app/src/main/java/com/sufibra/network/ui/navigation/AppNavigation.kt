@@ -23,6 +23,9 @@ import com.sufibra.network.ui.screens.events.TechnicianCurrentJobScreen
 import com.sufibra.network.ui.screens.events.TechnicianEventDetailScreen
 import com.sufibra.network.ui.screens.events.TechnicianMyJobsScreen
 import com.sufibra.network.ui.screens.login.LoginScreen
+import com.sufibra.network.ui.screens.profile.ChangePasswordScreen
+import com.sufibra.network.ui.screens.profile.EditProfileScreen
+import com.sufibra.network.ui.screens.profile.ProfileScreen
 import com.sufibra.network.ui.screens.splash.SplashScreen
 import com.sufibra.network.ui.screens.users.CreateUserScreen
 import com.sufibra.network.ui.screens.users.EditUserScreen
@@ -60,6 +63,18 @@ fun AppNavigation() {
 
         composable(Screen.UsersList.route) {
             UsersListScreen(navController)
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(navController)
+        }
+
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(navController)
+        }
+
+        composable(Screen.ChangePassword.route) {
+            ChangePasswordScreen(navController)
         }
 
         composable(Screen.ClientsList.route) {

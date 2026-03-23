@@ -4,15 +4,20 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.sufibra.network.domain.model.User
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.tasks.await
 import android.content.Context
 import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
 
 class UserRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+
+    suspend fun getCurrentUser(): Result<User> {
+        val uid = auth.currentUser?.uid
+            ?: return Result.failure(Exception("No hay una sesión activa"))
+
+        return getUserByUid(uid)
+    }
 
     suspend fun getUserByUid(uid: String): Result<User> {
         return try {
@@ -170,6 +175,31 @@ class UserRepository {
         }
     }
 
+    suspend fun updateOwnProfile(
+        nombres: String,
+        apellidos: String,
+        telefono: String?
+    ): Result<Unit> {
+        val uid = auth.currentUser?.uid
+            ?: return Result.failure(Exception("No hay una sesión activa"))
+
+        return try {
+            firestore.collection("usuarios")
+                .document(uid)
+                .update(
+                    mapOf(
+                        "nombres" to nombres,
+                        "apellidos" to apellidos,
+                        "telefono" to telefono
+                    )
+                )
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 
 
