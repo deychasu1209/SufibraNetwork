@@ -64,9 +64,11 @@ fun TechnicianCurrentJobScreen(
     val viewModel: EventViewModel = viewModel()
     val currentEvent by viewModel.currentTechnicianEvent.collectAsState()
     val client by viewModel.selectedClient.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
     val technicianId = FirebaseAuth.getInstance().currentUser?.uid
     val startEventSuccess by viewModel.startEventSuccess.collectAsState()
     var showStartDialog by remember { mutableStateOf(false) }
+    var showStartErrorDialog by remember { mutableStateOf(false) }
     var clientExpanded by remember { mutableStateOf(false) }
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -85,6 +87,7 @@ fun TechnicianCurrentJobScreen(
             }
             false -> {
                 viewModel.clearStartEventState()
+                showStartErrorDialog = true
             }
             null -> Unit
         }
@@ -538,6 +541,31 @@ fun TechnicianCurrentJobScreen(
                     }
                 ) {
                     Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showStartErrorDialog && !errorMessage.isNullOrBlank()) {
+        AlertDialog(
+            onDismissRequest = {
+                showStartErrorDialog = false
+                viewModel.clearError()
+            },
+            title = {
+                Text("Aviso")
+            },
+            text = {
+                Text(errorMessage!!)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showStartErrorDialog = false
+                        viewModel.clearError()
+                    }
+                ) {
+                    Text("Aceptar")
                 }
             }
         )

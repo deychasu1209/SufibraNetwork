@@ -70,6 +70,7 @@ fun TechnicianEventDetailScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val takeEventSuccess by viewModel.takeEventSuccess.collectAsState()
     var showRestrictionDialog by remember { mutableStateOf(false) }
+    var shouldNavigateToCurrentJob by remember { mutableStateOf(false) }
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
 
@@ -85,6 +86,7 @@ fun TechnicianEventDetailScreen(
             }
             false -> {
                 viewModel.clearTakeEventState()
+                shouldNavigateToCurrentJob = errorMessage?.contains("ya tienes uno activo", ignoreCase = true) == true
                 showRestrictionDialog = true
             }
             null -> Unit
@@ -523,7 +525,10 @@ fun TechnicianEventDetailScreen(
                     TextButton(
                         onClick = {
                             viewModel.clearError()
-                            navController.navigate(Screen.TechnicianCurrentJob.route)
+                            showRestrictionDialog = false
+                            if (shouldNavigateToCurrentJob) {
+                                navController.navigate(Screen.TechnicianCurrentJob.route)
+                            }
                         }
                     ) {
                         Text("Aceptar")

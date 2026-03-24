@@ -1,6 +1,5 @@
 package com.sufibra.network.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -14,8 +13,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-
 class EventViewModel : ViewModel() {
+
+    private val repository = EventRepository()
+    private val clientRepository = ClientRepository()
+    private val userRepository = UserRepository()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -23,17 +25,35 @@ class EventViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    private val repository = EventRepository()
-    private val userRepository = UserRepository()
-
     private val _events = MutableStateFlow<List<Event>>(emptyList())
     val events: StateFlow<List<Event>> = _events
+
+    private val _availableEvents = MutableStateFlow<List<Event>>(emptyList())
+    val availableEvents: StateFlow<List<Event>> = _availableEvents
 
     private val _currentTechnicianEvent = MutableStateFlow<Event?>(null)
     val currentTechnicianEvent: StateFlow<Event?> = _currentTechnicianEvent
 
+    private val _selectedEvent = MutableStateFlow<Event?>(null)
+    val selectedEvent: StateFlow<Event?> = _selectedEvent
+
+    private val _selectedClient = MutableStateFlow<Client?>(null)
+    val selectedClient: StateFlow<Client?> = _selectedClient
+
+    private val _assignedTechnician = MutableStateFlow<User?>(null)
+    val assignedTechnician: StateFlow<User?> = _assignedTechnician
+
+    private val _clients = MutableStateFlow<List<Client>>(emptyList())
+    val clients: StateFlow<List<Client>> = _clients
+
+    private val _takeEventSuccess = MutableStateFlow<Boolean?>(null)
+    val takeEventSuccess: StateFlow<Boolean?> = _takeEventSuccess
+
     private val _startEventSuccess = MutableStateFlow<Boolean?>(null)
     val startEventSuccess: StateFlow<Boolean?> = _startEventSuccess
+
+    private val _finalizeEventSuccess = MutableStateFlow<Boolean?>(null)
+    val finalizeEventSuccess: StateFlow<Boolean?> = _finalizeEventSuccess
 
     private val _updateEventSuccess = MutableStateFlow<Boolean?>(null)
     val updateEventSuccess: StateFlow<Boolean?> = _updateEventSuccess
@@ -45,7 +65,6 @@ class EventViewModel : ViewModel() {
         return repository.createEvent(event)
     }
 
-
     fun loadEvents() {
         viewModelScope.launch {
             val result = repository.getAllEvents()
@@ -54,11 +73,6 @@ class EventViewModel : ViewModel() {
             }
         }
     }
-
-
-    private val clientRepository = ClientRepository()
-    private val _clients = MutableStateFlow<List<Client>>(emptyList())
-    val clients: StateFlow<List<Client>> = _clients
 
     fun loadClients() {
         viewModelScope.launch {
@@ -69,9 +83,6 @@ class EventViewModel : ViewModel() {
         }
     }
 
-    private val _availableEvents = MutableStateFlow<List<Event>>(emptyList())
-    val availableEvents: StateFlow<List<Event>> = _availableEvents
-
     fun loadAvailableEvents() {
         viewModelScope.launch {
             val result = repository.getAvailableEvents()
@@ -81,13 +92,8 @@ class EventViewModel : ViewModel() {
         }
     }
 
-    private val _takeEventSuccess = MutableStateFlow<Boolean?>(null)
-    val takeEventSuccess: StateFlow<Boolean?> = _takeEventSuccess
-
     fun takeEvent(event: Event, technicianId: String) {
-
         viewModelScope.launch {
-
             val activeCheck = repository.getActiveEventForTechnician(technicianId)
 
             if (activeCheck.getOrNull() != null) {
@@ -100,43 +106,38 @@ class EventViewModel : ViewModel() {
 
             result.onSuccess {
                 _takeEventSuccess.value = true
+                loadCurrentTechnicianEvent(technicianId)
+                loadAvailableEvents()
+                loadEvents()
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo tomar el evento."
                 _takeEventSuccess.value = false
             }
         }
     }
 
-
-    private val _selectedEvent = MutableStateFlow<Event?>(null)
-    val selectedEvent: StateFlow<Event?> = _selectedEvent
-
     fun loadEventById(eventId: String) {
-
         viewModelScope.launch {
-
             _isLoading.value = true
             _errorMessage.value = null
 
             val result = repository.getEventById(eventId)
 
             result.onSuccess { event ->
-
                 _selectedEvent.value = event
 
                 if (event.tecnicoId != null) {
-
                     val techResult = userRepository.getUserByUid(event.tecnicoId)
-
                     techResult.onSuccess { tech ->
                         _assignedTechnician.value = tech
                     }
-
                     techResult.onFailure {
                         _assignedTechnician.value = null
                     }
+                } else {
+                    _assignedTechnician.value = null
                 }
             }
 
@@ -148,12 +149,8 @@ class EventViewModel : ViewModel() {
         }
     }
 
-    private val _selectedClient = MutableStateFlow<Client?>(null)
-    val selectedClient: StateFlow<Client?> = _selectedClient
-
     fun loadClientForEvent(clientId: String) {
         viewModelScope.launch {
-
             val result = clientRepository.getClientById(clientId)
 
             result.onSuccess {
@@ -166,9 +163,6 @@ class EventViewModel : ViewModel() {
         }
     }
 
-    private val _assignedTechnician = MutableStateFlow<User?>(null)
-    val assignedTechnician: StateFlow<User?> = _assignedTechnician
-
     fun clearError() {
         _errorMessage.value = null
     }
@@ -178,9 +172,7 @@ class EventViewModel : ViewModel() {
     }
 
     fun loadCurrentTechnicianEvent(technicianId: String) {
-
         viewModelScope.launch {
-
             val result = repository.getActiveEventForTechnician(technicianId)
 
             result.onSuccess {
@@ -194,17 +186,30 @@ class EventViewModel : ViewModel() {
     }
 
     fun startEvent(eventId: String) {
-
         viewModelScope.launch {
+            val technicianId = FirebaseAuth.getInstance().currentUser?.uid
 
-            val result = repository.startEvent(eventId)
+            if (technicianId.isNullOrBlank()) {
+                _errorMessage.value = "No se pudo identificar al técnico actual."
+                _startEventSuccess.value = false
+                return@launch
+            }
+
+            val result = repository.startEvent(
+                eventId = eventId,
+                technicianId = technicianId
+            )
 
             result.onSuccess {
                 _startEventSuccess.value = true
+                loadCurrentTechnicianEvent(technicianId)
+                loadEventById(eventId)
+                loadAvailableEvents()
+                loadEvents()
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo iniciar el evento."
                 _startEventSuccess.value = false
             }
         }
@@ -214,16 +219,19 @@ class EventViewModel : ViewModel() {
         _startEventSuccess.value = null
     }
 
-    private val _finalizeEventSuccess = MutableStateFlow<Boolean?>(null)
-    val finalizeEventSuccess: StateFlow<Boolean?> = _finalizeEventSuccess
-
     fun finalizeEvent(
         eventId: String,
         solucionAplicada: String,
         observaciones: String?
     ) {
-
         viewModelScope.launch {
+            val technicianId = FirebaseAuth.getInstance().currentUser?.uid
+
+            if (technicianId.isNullOrBlank()) {
+                _errorMessage.value = "No se pudo identificar al técnico actual."
+                _finalizeEventSuccess.value = false
+                return@launch
+            }
 
             if (solucionAplicada.isBlank()) {
                 _errorMessage.value = "La solución aplicada es obligatoria"
@@ -233,16 +241,21 @@ class EventViewModel : ViewModel() {
 
             val result = repository.finalizeEvent(
                 eventId = eventId,
+                technicianId = technicianId,
                 solucionAplicada = solucionAplicada,
                 observaciones = observaciones
             )
 
             result.onSuccess {
                 _finalizeEventSuccess.value = true
+                loadCurrentTechnicianEvent(technicianId)
+                loadEventById(eventId)
+                loadAvailableEvents()
+                loadEvents()
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo finalizar el evento."
                 _finalizeEventSuccess.value = false
             }
         }
@@ -254,8 +267,14 @@ class EventViewModel : ViewModel() {
         observaciones: String?,
         client: Client
     ) {
-
         viewModelScope.launch {
+            val technicianId = FirebaseAuth.getInstance().currentUser?.uid
+
+            if (technicianId.isNullOrBlank()) {
+                _errorMessage.value = "No se pudo identificar al técnico actual."
+                _finalizeEventSuccess.value = false
+                return@launch
+            }
 
             if (solucionAplicada.isBlank()) {
                 _errorMessage.value = "La solución aplicada es obligatoria"
@@ -272,6 +291,7 @@ class EventViewModel : ViewModel() {
 
             val result = repository.finalizeInstallationWithClient(
                 eventId = eventId,
+                technicianId = technicianId,
                 solucionAplicada = solucionAplicada,
                 observaciones = observaciones,
                 client = client
@@ -279,10 +299,14 @@ class EventViewModel : ViewModel() {
 
             result.onSuccess {
                 _finalizeEventSuccess.value = true
+                loadCurrentTechnicianEvent(technicianId)
+                loadEventById(eventId)
+                loadAvailableEvents()
+                loadEvents()
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo finalizar la instalación."
                 _finalizeEventSuccess.value = false
             }
         }
@@ -298,7 +322,6 @@ class EventViewModel : ViewModel() {
         prioridad: String
     ) {
         viewModelScope.launch {
-
             if (descripcion.isBlank()) {
                 _errorMessage.value = "La descripción es obligatoria"
                 _updateEventSuccess.value = false
@@ -390,5 +413,4 @@ class EventViewModel : ViewModel() {
             else -> null
         }
     }
-
 }
