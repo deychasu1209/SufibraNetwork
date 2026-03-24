@@ -26,7 +26,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,20 +54,143 @@ import com.sufibra.network.ui.theme.RojoAlto
 import com.sufibra.network.ui.theme.Turquesa
 import com.sufibra.network.ui.theme.VerdeFinalizado
 import com.sufibra.network.viewmodel.EventViewModel
+import com.sufibra.network.viewmodel.UsersViewModel
+import java.util.Calendar
+
+private const val FILTER_ALL = "ALL"
+private const val FILTER_AVAILABLE = "DISPONIBLE"
+private const val FILTER_TAKEN = "TOMADO"
+private const val FILTER_IN_PROGRESS = "EN PROCESO"
+private const val FILTER_FINISHED = "FINALIZADO"
+private const val FILTER_CANCELED = "CANCELADO"
+private const val FILTER_TYPE_AVERIA = "AVERIA"
+private const val FILTER_TYPE_INSTALLATION = "INSTALACION"
+private const val FILTER_PRIORITY_HIGH = "ALTA"
+private const val FILTER_PRIORITY_MEDIUM = "MEDIA"
+private const val FILTER_PRIORITY_LOW = "BAJA"
+private const val FILTER_DATE_TODAY = "TODAY"
+private const val FILTER_DATE_WEEK = "WEEK"
+private const val FILTER_DATE_MONTH = "MONTH"
+
+private data class FilterOption(
+    val value: String,
+    val label: String
+)
 
 @Composable
 fun EventsListScreen(navController: NavController) {
-
-    val viewModel: EventViewModel = viewModel()
-    val events by viewModel.events.collectAsState()
-    var showMenu by remember { mutableStateOf(false) }
-    val clients by viewModel.clients.collectAsState()
+    val eventViewModel: EventViewModel = viewModel()
+    val usersViewModel: UsersViewModel = viewModel()
+    val events by eventViewModel.events.collectAsState()
+    val users by usersViewModel.users.collectAsState()
+    val clients by eventViewModel.clients.collectAsState()
     val clientsMap = clients.associateBy { it.idCliente }
     val colorScheme = MaterialTheme.colorScheme
 
+    var showCreateMenu by remember { mutableStateOf(false) }
+    var filtersExpanded by remember { mutableStateOf(false) }
+    var advancedFiltersExpanded by remember { mutableStateOf(false) }
+    var selectedState by remember { mutableStateOf(FILTER_ALL) }
+    var selectedType by remember { mutableStateOf(FILTER_ALL) }
+    var selectedPriority by remember { mutableStateOf(FILTER_ALL) }
+    var selectedTechnician by remember { mutableStateOf(FILTER_ALL) }
+    var selectedDate by remember { mutableStateOf(FILTER_ALL) }
+
     LaunchedEffect(Unit) {
-        viewModel.loadEvents()
-        viewModel.loadClients()
+        eventViewModel.loadEvents()
+        eventViewModel.loadClients()
+        usersViewModel.loadUsers()
+    }
+
+    val stateOptions = remember {
+        listOf(
+            FilterOption(FILTER_ALL, "Todos"),
+            FilterOption(FILTER_AVAILABLE, "Disponible"),
+            FilterOption(FILTER_TAKEN, "Tomado"),
+            FilterOption(FILTER_IN_PROGRESS, "En proceso"),
+            FilterOption(FILTER_FINISHED, "Finalizado"),
+            FilterOption(FILTER_CANCELED, "Cancelado")
+        )
+    }
+
+    val typeOptions = remember {
+        listOf(
+            FilterOption(FILTER_ALL, "Todos"),
+            FilterOption(FILTER_TYPE_AVERIA, "Averías"),
+            FilterOption(FILTER_TYPE_INSTALLATION, "Instalaciones")
+        )
+    }
+
+    val priorityOptions = remember {
+        listOf(
+            FilterOption(FILTER_ALL, "Todas"),
+            FilterOption(FILTER_PRIORITY_HIGH, "Alta"),
+            FilterOption(FILTER_PRIORITY_MEDIUM, "Media"),
+            FilterOption(FILTER_PRIORITY_LOW, "Baja")
+        )
+    }
+
+    val dateOptions = remember {
+        listOf(
+            FilterOption(FILTER_ALL, "Todas"),
+            FilterOption(FILTER_DATE_TODAY, "Hoy"),
+            FilterOption(FILTER_DATE_WEEK, "Esta semana"),
+            FilterOption(FILTER_DATE_MONTH, "Este mes")
+        )
+    }
+
+    val technicianOptions = remember(users) {
+        buildList {
+            add(FilterOption(FILTER_ALL, "Todos"))
+            users
+                .filter { it.rol == "TECHNICIAN" }
+                .sortedBy { "${it.nombres} ${it.apellidos}".trim().lowercase() }
+                .forEach { technician ->
+                    add(
+                        FilterOption(
+                            value = technician.idUsuario,
+                            label = "${technician.nombres} ${technician.apellidos}".trim()
+                        )
+                    )
+                }
+        }
+    }
+
+    val filteredEvents = remember(
+        events,
+        selectedState,
+        selectedType,
+        selectedPriority,
+        selectedTechnician,
+        selectedDate
+    ) {
+        events
+            .filter { event ->
+                val matchesState = selectedState == FILTER_ALL || event.estadoEvento == selectedState
+                val matchesType = selectedType == FILTER_ALL || event.tipoEvento == selectedType
+                val matchesPriority = selectedPriority == FILTER_ALL || event.prioridad == selectedPriority
+                val matchesTechnician = selectedTechnician == FILTER_ALL || event.tecnicoId == selectedTechnician
+                val matchesDate = matchesDateFilter(event.fechaCreacion, selectedDate)
+
+                matchesState && matchesType && matchesPriority && matchesTechnician && matchesDate
+            }
+            .sortedByDescending { it.fechaCreacion }
+    }
+
+    val activeFiltersCount = remember(
+        selectedState,
+        selectedType,
+        selectedPriority,
+        selectedTechnician,
+        selectedDate
+    ) {
+        listOf(
+            selectedState != FILTER_ALL,
+            selectedType != FILTER_ALL,
+            selectedPriority != FILTER_ALL,
+            selectedTechnician != FILTER_ALL,
+            selectedDate != FILTER_ALL
+        ).count { it }
     }
 
     AdminBaseScreen(
@@ -75,7 +198,7 @@ fun EventsListScreen(navController: NavController) {
         floatingActionButton = {
             Box {
                 FloatingActionButton(
-                    onClick = { showMenu = true },
+                    onClick = { showCreateMenu = true },
                     containerColor = colorScheme.primary,
                     contentColor = colorScheme.onPrimary
                 ) {
@@ -86,13 +209,13 @@ fun EventsListScreen(navController: NavController) {
                 }
 
                 DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
+                    expanded = showCreateMenu,
+                    onDismissRequest = { showCreateMenu = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text("Crear Instalación") },
                         onClick = {
-                            showMenu = false
+                            showCreateMenu = false
                             navController.navigate(Screen.CreateInstallation.route)
                         }
                     )
@@ -100,7 +223,7 @@ fun EventsListScreen(navController: NavController) {
                     DropdownMenuItem(
                         text = { Text("Crear Avería") },
                         onClick = {
-                            showMenu = false
+                            showCreateMenu = false
                             navController.navigate(Screen.CreateAveria.route)
                         }
                     )
@@ -108,14 +231,11 @@ fun EventsListScreen(navController: NavController) {
             }
         }
     ) { paddingValues ->
-
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-
             BackTopBar(
                 title = "Eventos",
                 navController = navController,
@@ -126,21 +246,191 @@ fun EventsListScreen(navController: NavController) {
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
             ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colorScheme.surfaceVariant
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (filtersExpanded) {
+                                        filtersExpanded = false
+                                        advancedFiltersExpanded = false
+                                    } else {
+                                        filtersExpanded = true
+                                    }
+                                },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Filtros",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = colorScheme.onSurface
+                                )
 
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    placeholder = { Text("Buscar evento...") },
-                    modifier = Modifier.fillMaxWidth()
+                                if (activeFiltersCount > 0) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = colorScheme.primaryContainer
+                                    ) {
+                                        Text(
+                                            text = "$activeFiltersCount activos",
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
+
+                            Text(
+                                text = if (filtersExpanded) "Ocultar" else "Abrir",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = colorScheme.primary
+                            )
+                        }
+
+                        if (filtersExpanded) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AdminEventFilterSelector(
+                                    label = "Estado",
+                                    selectedValue = selectedState,
+                                    options = stateOptions,
+                                    onOptionSelected = { selectedState = it },
+                                    compact = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                AdminEventFilterSelector(
+                                    label = "Tipo",
+                                    selectedValue = selectedType,
+                                    options = typeOptions,
+                                    onOptionSelected = { selectedType = it },
+                                    compact = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AdminEventFilterSelector(
+                                    label = "Prioridad",
+                                    selectedValue = selectedPriority,
+                                    options = priorityOptions,
+                                    onOptionSelected = { selectedPriority = it },
+                                    compact = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { advancedFiltersExpanded = !advancedFiltersExpanded },
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = colorScheme.surface,
+                                    tonalElevation = 1.dp
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = "Más",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+
+                                        Text(
+                                            text = if (advancedFiltersExpanded) "Ocultar" else "Técnico y fecha",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (filtersExpanded && advancedFiltersExpanded) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AdminEventFilterSelector(
+                                    label = "Técnico",
+                                    selectedValue = selectedTechnician,
+                                    options = technicianOptions,
+                                    onOptionSelected = { selectedTechnician = it },
+                                    compact = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                AdminEventFilterSelector(
+                                    label = "Fecha",
+                                    selectedValue = selectedDate,
+                                    options = dateOptions,
+                                    onOptionSelected = { selectedDate = it },
+                                    compact = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                Text(
+                                    text = "Limpiar",
+                                    modifier = Modifier
+                                        .clickable {
+                                            selectedState = FILTER_ALL
+                                            selectedType = FILTER_ALL
+                                            selectedPriority = FILTER_ALL
+                                            selectedTechnician = FILTER_ALL
+                                            selectedDate = FILTER_ALL
+                                        }
+                                        .padding(vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "${filteredEvents.size} eventos visibles",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 LazyColumn(
                     modifier = Modifier.padding(4.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    items(events) { event ->
+                    items(filteredEvents) { event ->
                         val client = event.clienteId?.let { clientsMap[it] }
 
                         EventCard(
@@ -160,6 +450,66 @@ fun EventsListScreen(navController: NavController) {
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminEventFilterSelector(
+    label: String,
+    selectedValue: String,
+    options: List<FilterOption>,
+    onOptionSelected: (String) -> Unit,
+    compact: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    var expanded by remember { mutableStateOf(false) }
+    val selectedLabel = options.firstOrNull { it.value == selectedValue }?.label ?: options.first().label
+
+    Box(modifier = modifier) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = true },
+            shape = RoundedCornerShape(14.dp),
+            color = colorScheme.surface,
+            tonalElevation = 1.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(
+                    horizontal = 12.dp,
+                    vertical = if (compact) 8.dp else 10.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colorScheme.onSurfaceVariant
+                )
+
+                Text(
+                    text = selectedLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colorScheme.onSurface
+                )
+            }
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option.label) },
+                    onClick = {
+                        onOptionSelected(option.value)
+                        expanded = false
+                    }
+                )
             }
         }
     }
@@ -197,15 +547,17 @@ fun EventCard(
     }
     val resolvedLeftStripeColor = leftStripeColor ?: estadoColor
 
-    val iconTipo = if (tipo.uppercase() == "AVERIA")
+    val iconTipo = if (tipo.uppercase() == "AVERIA") {
         R.drawable.ic_averia
-    else
+    } else {
         R.drawable.ic_instalacion
+    }
 
-    val colorTipo = if (tipo.uppercase() == "AVERIA")
+    val colorTipo = if (tipo.uppercase() == "AVERIA") {
         RojoAlto
-    else
+    } else {
         AzulPrincipal
+    }
 
     Spacer(modifier = Modifier.height(4.dp))
 
@@ -215,7 +567,7 @@ fun EventCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 4.dp
@@ -236,19 +588,15 @@ fun EventCard(
                     .padding(16.dp)
                     .fillMaxWidth()
             ) {
-
                 Column(
                     modifier = Modifier.padding(2.dp)
                 ) {
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
-
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
@@ -275,7 +623,6 @@ fun EventCard(
                         }
 
                         Column(horizontalAlignment = Alignment.End) {
-
                             StatusBadge(estado, estadoColor)
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -287,7 +634,11 @@ fun EventCard(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = if (tipo.uppercase() == "AVERIA") nombreCliente ?: "Cliente" else "Nueva instalación",
+                        text = if (tipo.uppercase() == "AVERIA") {
+                            nombreCliente ?: "Cliente"
+                        } else {
+                            "Nueva instalación"
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         color = colorScheme.onSurface
                     )
@@ -295,7 +646,6 @@ fun EventCard(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-
                         Icon(
                             painter = painterResource(R.drawable.ic_ubicacion),
                             contentDescription = null,
@@ -305,8 +655,11 @@ fun EventCard(
                         Spacer(modifier = Modifier.width(6.dp))
 
                         Text(
-                            text = if (tipo.uppercase() == "AVERIA") direccionCliente ?: "Direccion no disponible"
-                            else extractDireccion(descripcion),
+                            text = if (tipo.uppercase() == "AVERIA") {
+                                direccionCliente ?: "Dirección no disponible"
+                            } else {
+                                extractDireccion(descripcion)
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = colorScheme.onSurfaceVariant
                         )
@@ -322,9 +675,7 @@ fun EventCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
-
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_fecha),
                                 contentDescription = null,
@@ -350,14 +701,42 @@ fun EventCard(
             }
         }
     }
-    Spacer(modifier = Modifier.height(8.dp))
 
+    Spacer(modifier = Modifier.height(8.dp))
 }
 
 fun extractDireccion(descripcion: String): String {
-
     val regex = Regex("Dirección:\\s*(.*?)\\s*Datos adicionales")
     val match = regex.find(descripcion)
 
     return match?.groupValues?.get(1) ?: descripcion
+}
+
+private fun matchesDateFilter(
+    eventTimestamp: Long,
+    filterValue: String
+): Boolean {
+    if (filterValue == FILTER_ALL) return true
+
+    val now = Calendar.getInstance()
+    val eventDate = Calendar.getInstance().apply { timeInMillis = eventTimestamp }
+
+    return when (filterValue) {
+        FILTER_DATE_TODAY -> {
+            now.get(Calendar.YEAR) == eventDate.get(Calendar.YEAR) &&
+                now.get(Calendar.DAY_OF_YEAR) == eventDate.get(Calendar.DAY_OF_YEAR)
+        }
+
+        FILTER_DATE_WEEK -> {
+            now.get(Calendar.YEAR) == eventDate.get(Calendar.YEAR) &&
+                now.get(Calendar.WEEK_OF_YEAR) == eventDate.get(Calendar.WEEK_OF_YEAR)
+        }
+
+        FILTER_DATE_MONTH -> {
+            now.get(Calendar.YEAR) == eventDate.get(Calendar.YEAR) &&
+                now.get(Calendar.MONTH) == eventDate.get(Calendar.MONTH)
+        }
+
+        else -> true
+    }
 }
