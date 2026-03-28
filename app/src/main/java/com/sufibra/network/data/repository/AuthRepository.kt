@@ -21,7 +21,6 @@ class AuthRepository {
             } else {
                 Result.failure(Exception("Usuario no encontrado"))
             }
-
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -51,6 +50,15 @@ class AuthRepository {
             currentUser.reauthenticate(credential).await()
             currentUser.updatePassword(newPassword).await()
 
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            firebaseAuth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

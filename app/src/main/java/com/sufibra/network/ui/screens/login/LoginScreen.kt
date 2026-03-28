@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +50,7 @@ import com.sufibra.network.R
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AzulPrincipal
 import com.sufibra.network.ui.theme.AzulPrincipalOscuro
+import com.sufibra.network.ui.theme.DarkBackground
 import com.sufibra.network.ui.theme.Turquesa
 import com.sufibra.network.viewmodel.LoginViewModel
 
@@ -57,10 +60,13 @@ fun LoginScreen(navController: NavController) {
     val viewModel: LoginViewModel = viewModel()
 
     val isLoading by viewModel.isLoading.collectAsState()
+    val isRecoveryLoading by viewModel.isRecoveryLoading.collectAsState()
     val loggedUser by viewModel.loggedUser.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val recoveryErrorMessage by viewModel.recoveryErrorMessage.collectAsState()
+    val recoverySuccessMessage by viewModel.recoverySuccessMessage.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
-    val gradientColors = if (MaterialTheme.colorScheme.background == com.sufibra.network.ui.theme.DarkBackground) {
+    val gradientColors = if (colorScheme.background == DarkBackground) {
         listOf(AzulPrincipalOscuro, AzulPrincipal)
     } else {
         listOf(AzulPrincipal, Turquesa)
@@ -69,10 +75,11 @@ fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
+    var showRecoveryDialog by remember { mutableStateOf(false) }
+    var recoveryEmail by remember { mutableStateOf("") }
 
     LaunchedEffect(loggedUser) {
         loggedUser?.let { user ->
-
             if (user.rol == "ADMIN") {
                 navController.navigate(Screen.AdminDashboard.route) {
                     popUpTo(0) { inclusive = true }
@@ -87,6 +94,103 @@ fun LoginScreen(navController: NavController) {
         }
     }
 
+    if (showRecoveryDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                if (!isRecoveryLoading) {
+                    showRecoveryDialog = false
+                    viewModel.clearRecoveryError()
+                }
+            },
+            title = {
+                Text("Recuperar contraseña")
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.",
+                        color = colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = recoveryEmail,
+                        onValueChange = {
+                            recoveryEmail = it
+                            if (recoveryErrorMessage != null) {
+                                viewModel.clearRecoveryError()
+                            }
+                        },
+                        label = { Text("Correo electrónico") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isRecoveryLoading,
+                        singleLine = true
+                    )
+
+                    recoveryErrorMessage?.let {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = it,
+                            color = colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.sendPasswordRecovery(recoveryEmail) },
+                    enabled = !isRecoveryLoading
+                ) {
+                    if (isRecoveryLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Enviar correo")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showRecoveryDialog = false
+                        viewModel.clearRecoveryError()
+                    },
+                    enabled = !isRecoveryLoading
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    recoverySuccessMessage?.let { successMessage ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearRecoverySuccess() },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.clearRecoverySuccess() }
+                ) {
+                    Text("Entendido")
+                }
+            },
+            title = {
+                Text("Correo enviado")
+            },
+            text = {
+                Text(successMessage)
+            }
+        )
+
+        LaunchedEffect(successMessage) {
+            showRecoveryDialog = false
+            recoveryEmail = ""
+            viewModel.clearRecoveryError()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -96,7 +200,6 @@ fun LoginScreen(navController: NavController) {
                 )
             )
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -106,7 +209,6 @@ fun LoginScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(
@@ -137,12 +239,9 @@ fun LoginScreen(navController: NavController) {
                     containerColor = colorScheme.surface
                 )
             ) {
-
                 Column(
-                    modifier = Modifier
-                        .padding(24.dp)
+                    modifier = Modifier.padding(24.dp)
                 ) {
-
                     Text(
                         text = "Iniciar sesión",
                         style = MaterialTheme.typography.titleLarge,
@@ -165,7 +264,8 @@ fun LoginScreen(navController: NavController) {
                             if (errorMessage != null) viewModel.resetError()
                         },
                         label = { Text("Correo electrónico") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -177,28 +277,34 @@ fun LoginScreen(navController: NavController) {
                             if (errorMessage != null) viewModel.resetError()
                         },
                         label = { Text("Contraseña") },
-                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        visualTransformation = if (showPassword) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
 
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = showPassword,
+                                onCheckedChange = { showPassword = it }
+                            )
 
-                        Checkbox(
-                            checked = showPassword,
-                            onCheckedChange = { showPassword = it }
-                        )
-
-                        Text(
-                            text = "Mostrar contraseña",
-                            color = colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(start = 4.dp)
-                                .clickable {
-                                    showPassword = !showPassword
-                                }
-                        )
+                            Text(
+                                text = "Mostrar contraseña",
+                                color = colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .padding(start = 4.dp)
+                                    .clickable { showPassword = !showPassword }
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -210,7 +316,7 @@ fun LoginScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        enabled = !isLoading
+                        enabled = !isLoading && !isRecoveryLoading
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
@@ -220,6 +326,25 @@ fun LoginScreen(navController: NavController) {
                         } else {
                             Text("Iniciar sesión")
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Text(
+                            text = "¿Olvidaste tu contraseña?",
+                            color = colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.clickable {
+                                recoveryEmail = email
+                                showRecoveryDialog = true
+                                viewModel.clearRecoveryError()
+                                viewModel.clearRecoverySuccess()
+                            }
+                        )
                     }
 
                     errorMessage?.let {
@@ -242,5 +367,3 @@ fun LoginScreen(navController: NavController) {
         }
     }
 }
-
-
