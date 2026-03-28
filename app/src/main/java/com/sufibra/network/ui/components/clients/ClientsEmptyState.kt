@@ -22,8 +22,8 @@ import com.sufibra.network.R
 
 @Composable
 fun ClientsEmptyState(
-    title: String = "Aun no hay clientes registrados",
-    description: String = "Crea el primer cliente para empezar a gestionar averias e instalaciones con datos completos."
+    title: String = "Aún no hay clientes registrados",
+    description: String = "Crea el primer cliente para empezar a gestionar averías e instalaciones con datos completos."
 ) {
     val colorScheme = MaterialTheme.colorScheme
 

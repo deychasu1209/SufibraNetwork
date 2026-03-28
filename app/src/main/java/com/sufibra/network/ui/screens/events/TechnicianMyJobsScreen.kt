@@ -125,7 +125,7 @@ fun TechnicianMyJobsScreen(
                 item {
                     JobsSectionHeader(
                         title = "HISTORIAL",
-                        subtitle = if (historyEvents.isEmpty()) "Sin eventos finalizados aun" else "${historyEvents.size} eventos finalizados",
+                        subtitle = if (historyEvents.isEmpty()) "Sin eventos finalizados aún" else "${historyEvents.size} eventos finalizados",
                         accent = historyEvents.isNotEmpty()
                     )
                 }
@@ -198,12 +198,12 @@ private fun HistoryJobCard(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val title = if (event.tipoEvento.uppercase() == "AVERIA") {
-        clientName ?: "Averia tecnica"
+        clientName ?: "Avería técnica"
     } else {
-        "Instalacion fibra"
+        "Instalación fibra"
     }
     val subtitle = if (event.tipoEvento.uppercase() == "AVERIA") {
-        clientAddress ?: "Cliente sin direccion registrada"
+        clientAddress ?: "Cliente sin dirección registrada"
     } else {
         extractDireccion(event.descripcion)
     }
@@ -295,13 +295,13 @@ private fun JobsHistoryEmptyCard() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Aun no hay historial disponible",
+                text = "Aún no hay historial disponible",
                 style = MaterialTheme.typography.titleMedium,
                 color = colorScheme.onSurface
             )
 
             Text(
-                text = "Los eventos que finalices apareceran aqui como referencia de tu trabajo reciente.",
+                text = "Los eventos que finalices aparecerán aquí como referencia de tu trabajo reciente.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colorScheme.onSurfaceVariant
             )

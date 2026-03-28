@@ -1,4 +1,4 @@
-﻿package com.sufibra.network.ui.screens.clients
+package com.sufibra.network.ui.screens.clients
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,8 +50,8 @@ import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.viewmodel.ClientsViewModel
 import java.text.Normalizer
 
-private const val ORDER_NEWEST = "Mas recientes"
-private const val ORDER_OLDEST = "Mas antiguos"
+private const val ORDER_NEWEST = "Más recientes"
+private const val ORDER_OLDEST = "Más antiguos"
 private const val ORDER_NAME_ASC = "Nombre A-Z"
 private const val ORDER_NAME_DESC = "Nombre Z-A"
 private const val STATUS_ALL = "Todos"
@@ -270,14 +271,46 @@ fun ClientsListScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                errorMessage?.let { message ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.errorContainer
+                        ),
+                        shape = RoundedCornerShape(18.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "No se pudo completar la acción",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = colorScheme.onErrorContainer
+                            )
+                            Text(
+                                text = message,
+                                color = colorScheme.onErrorContainer
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
                 if (isLoading) {
-                    CircularProgressIndicator()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 } else if (clients.isEmpty()) {
                     ClientsEmptyState()
                 } else if (filteredClients.isEmpty()) {
                     ClientsEmptyState(
                         title = "No se encontraron clientes",
-                        description = "Prueba con otro texto o ajusta los filtros para ver mas resultados."
+                        description = "Prueba con otro texto o ajusta los filtros para ver más resultados."
                     )
                 } else {
                     Text(
@@ -312,14 +345,6 @@ fun ClientsListScreen(
                         }
                     }
                 }
-
-                errorMessage?.let {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = it,
-                        color = colorScheme.error
-                    )
-                }
             }
         }
     }
@@ -327,16 +352,18 @@ fun ClientsListScreen(
     if (clientToToggle != null && targetStatus != null) {
         AlertDialog(
             onDismissRequest = {
-                clientToToggle = null
-                targetStatus = null
+                if (!isLoading) {
+                    clientToToggle = null
+                    targetStatus = null
+                }
             },
             title = { Text("Confirmar cambio de estado") },
             text = {
                 Text(
                     if (targetStatus == true) {
-                        "Se activara el cliente ${clientToToggle!!.nombresApellidos}."
+                        "Se activará el cliente ${clientToToggle!!.nombresApellidos}."
                     } else {
-                        "Se desactivara el cliente ${clientToToggle!!.nombresApellidos}."
+                        "Se desactivará el cliente ${clientToToggle!!.nombresApellidos}."
                     }
                 )
             },
@@ -346,9 +373,17 @@ fun ClientsListScreen(
                         viewModel.updateClientStatus(clientToToggle!!.idCliente, targetStatus!!)
                         clientToToggle = null
                         targetStatus = null
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
-                    Text(if (targetStatus == true) "Activar" else "Desactivar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(if (targetStatus == true) "Activar" else "Desactivar")
+                    }
                 }
             },
             dismissButton = {
@@ -356,7 +391,8 @@ fun ClientsListScreen(
                     onClick = {
                         clientToToggle = null
                         targetStatus = null
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
                     Text("Cancelar")
                 }
@@ -425,4 +461,3 @@ private fun CompactClientFilterSelector(
         }
     }
 }
-

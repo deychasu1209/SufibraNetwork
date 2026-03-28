@@ -35,7 +35,7 @@ class ClientsViewModel : ViewModel() {
                 _clients.value = it
             }
             result.onFailure {
-                _errorMessage.value = it.message ?: "No se pudieron cargar los clientes"
+                _errorMessage.value = it.message ?: "No se pudieron cargar los clientes."
             }
             _isLoading.value = false
         }
@@ -49,7 +49,7 @@ class ClientsViewModel : ViewModel() {
                 _selectedClient.value = it
             }
             result.onFailure {
-                _errorMessage.value = it.message ?: "No se pudo cargar el cliente"
+                _errorMessage.value = it.message ?: "No se pudo cargar el cliente."
             }
             _isLoading.value = false
         }
@@ -71,7 +71,7 @@ class ClientsViewModel : ViewModel() {
                 loadClients()
             }
             result.onFailure {
-                _errorMessage.value = it.message ?: "No se pudo crear el cliente"
+                _errorMessage.value = it.message ?: "No se pudo crear el cliente."
                 _operationSuccess.value = false
             }
             _isLoading.value = false
@@ -95,7 +95,7 @@ class ClientsViewModel : ViewModel() {
                 loadClients()
             }
             result.onFailure {
-                _errorMessage.value = it.message ?: "No se pudo actualizar el cliente"
+                _errorMessage.value = it.message ?: "No se pudo actualizar el cliente."
                 _operationSuccess.value = false
             }
             _isLoading.value = false
@@ -111,7 +111,7 @@ class ClientsViewModel : ViewModel() {
                 loadClients()
             }
             result.onFailure {
-                _errorMessage.value = it.message ?: "No se pudo actualizar el estado del cliente"
+                _errorMessage.value = it.message ?: "No se pudo actualizar el estado del cliente."
                 _operationSuccess.value = false
             }
             _isLoading.value = false
@@ -128,15 +128,15 @@ class ClientsViewModel : ViewModel() {
 
     private fun validateClient(client: Client): String? {
         return when {
-            client.nombresApellidos.isBlank() -> "El nombre del cliente es obligatorio"
-            client.dni.isBlank() -> "El DNI es obligatorio"
-            client.dni.any { !it.isDigit() } -> "El DNI debe contener solo números"
-            client.dni.length < 8 -> "El DNI debe tener al menos 8 dígitos"
-            client.celular.isBlank() -> "El celular es obligatorio"
-            client.celular.any { !it.isDigit() } -> "El celular debe contener solo números"
-            client.celular.length < 9 -> "El celular debe tener al menos 9 dígitos"
-            client.direccion.isBlank() -> "La dirección es obligatoria"
-            client.zona.isBlank() -> "La zona es obligatoria"
+            client.nombresApellidos.isBlank() -> "El nombre del cliente es obligatorio."
+            client.dni.isBlank() -> "El DNI es obligatorio."
+            client.dni.any { !it.isDigit() } -> "El DNI debe contener solo números."
+            client.dni.length < 8 -> "El DNI debe tener al menos 8 dígitos."
+            client.celular.isBlank() -> "El celular es obligatorio."
+            client.celular.any { !it.isDigit() } -> "El celular debe contener solo números."
+            client.celular.length < 9 -> "El celular debe tener al menos 9 dígitos."
+            client.direccion.isBlank() -> "La dirección es obligatoria."
+            client.zona.isBlank() -> "La zona es obligatoria."
             else -> null
         }
     }

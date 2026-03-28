@@ -17,10 +17,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -66,9 +64,9 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.sufibra.network.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.delay
 
 private val LimaCenter = LatLng(-12.0464, -77.0428)
 
@@ -136,7 +134,7 @@ fun MapLocationPickerDialog(
         hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (!hasLocationPermission) {
-            locationHelpText = "Activa la ubicacion para centrar el mapa en tu posicion actual."
+            locationHelpText = "Activa la ubicación para centrar el mapa en tu posición actual."
         }
     }
 
@@ -162,9 +160,9 @@ fun MapLocationPickerDialog(
             if (currentLocation != null) {
                 cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocation, 18f))
                 hasCenteredOnCurrentLocation = true
-                locationHelpText = "Tu ubicacion actual ya esta centrada. Ajusta el pin si hace falta."
+                locationHelpText = "Tu ubicación actual ya está centrada. Ajusta el pin si hace falta."
             } else {
-                locationHelpText = "No se pudo obtener tu ubicacion exacta. Puedes mover el mapa manualmente."
+                locationHelpText = "No se pudo obtener tu ubicación exacta. Puedes mover el mapa manualmente."
             }
         }
     }
@@ -197,7 +195,7 @@ fun MapLocationPickerDialog(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Seleccionar ubicacion",
+                            text = "Seleccionar ubicación",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = colorScheme.onSurface
@@ -230,10 +228,10 @@ fun MapLocationPickerDialog(
                                     durationMs = 900
                                 )
                                 locationHelpText =
-                                    "Mapa centrado en tu ubicacion actual. Ajusta el pin si hace falta."
+                                    "Mapa centrado en tu ubicación actual. Ajusta el pin si hace falta."
                             } else {
                                 locationHelpText =
-                                    "No se pudo obtener tu ubicacion actual. Puedes mover el mapa manualmente."
+                                    "No se pudo obtener tu ubicación actual. Puedes mover el mapa manualmente."
                             }
                         }
                     },
@@ -250,7 +248,7 @@ fun MapLocationPickerDialog(
                 ) {
                     androidx.compose.material3.Icon(
                         painter = painterResource(id = R.drawable.ic_zona),
-                        contentDescription = "Centrar en mi ubicacion",
+                        contentDescription = "Centrar en mi ubicación",
                         tint = colorScheme.primary
                     )
                 }
@@ -311,7 +309,7 @@ fun MapLocationPickerDialog(
                         )
 
                         Text(
-                            text = "Lat ${selectedPoint.latitude.formatCoordinate()}  ·  Lng ${selectedPoint.longitude.formatCoordinate()}",
+                            text = "Lat ${selectedPoint.latitude.formatCoordinate()} · Lng ${selectedPoint.longitude.formatCoordinate()}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = colorScheme.onSurface
                         )
@@ -337,7 +335,7 @@ fun MapLocationPickerDialog(
                                 modifier = Modifier.weight(1.35f),
                                 contentPadding = PaddingValues(vertical = 14.dp)
                             ) {
-                                Text("Confirmar ubicacion")
+                                Text("Confirmar ubicación")
                             }
                         }
                     }

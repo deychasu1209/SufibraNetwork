@@ -1,5 +1,6 @@
 package com.sufibra.network.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sufibra.network.data.repository.UserRepository
@@ -7,8 +8,6 @@ import com.sufibra.network.domain.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import android.content.Context
-
 
 class UsersViewModel : ViewModel() {
 
@@ -26,7 +25,6 @@ class UsersViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-
     fun createUser(
         context: Context,
         nombres: String,
@@ -36,29 +34,26 @@ class UsersViewModel : ViewModel() {
         rol: String,
         telefono: String? = null,
         zonaAsignada: String? = null
-    )
-    {
-
+    ) {
         if (nombres.isBlank() || apellidos.isBlank() || correo.isBlank() || password.isBlank()) {
-            _errorMessage.value = "Todos los campos obligatorios deben completarse"
+            _errorMessage.value = "Todos los campos obligatorios deben completarse."
             return
         }
-        // Validación teléfono (si se envía)
-        if (!telefono.isNullOrBlank()) {
 
+        // Validación de teléfono (si se envía)
+        if (!telefono.isNullOrBlank()) {
             if (telefono.length != 9) {
-                _errorMessage.value = "El teléfono debe tener 9 dígitos"
+                _errorMessage.value = "El teléfono debe tener 9 dígitos."
                 return
             }
 
             if (!telefono.all { it.isDigit() }) {
-                _errorMessage.value = "El teléfono solo debe contener números"
+                _errorMessage.value = "El teléfono solo debe contener números."
                 return
             }
         }
 
         viewModelScope.launch {
-
             _isLoading.value = true
             _errorMessage.value = null
 
@@ -79,14 +74,13 @@ class UsersViewModel : ViewModel() {
                 zonaAsignada
             )
 
-
             result.onSuccess {
                 _operationSuccess.value = true
                 loadUsers()
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo crear el usuario. Inténtalo nuevamente."
                 _operationSuccess.value = false
             }
 
@@ -94,11 +88,8 @@ class UsersViewModel : ViewModel() {
         }
     }
 
-
     fun loadUsers() {
-
         viewModelScope.launch {
-
             _isLoading.value = true
 
             val result = userRepository.getAllUsers()
@@ -108,18 +99,15 @@ class UsersViewModel : ViewModel() {
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudieron cargar los usuarios."
             }
 
             _isLoading.value = false
         }
     }
 
-
     fun updateUser(user: User) {
-
         viewModelScope.launch {
-
             _isLoading.value = true
 
             val result = userRepository.updateUser(user)
@@ -130,7 +118,7 @@ class UsersViewModel : ViewModel() {
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo actualizar el usuario."
                 _operationSuccess.value = false
             }
 
@@ -138,11 +126,8 @@ class UsersViewModel : ViewModel() {
         }
     }
 
-
     fun updateUserStatus(uid: String, estado: Boolean) {
-
         viewModelScope.launch {
-
             _isLoading.value = true
 
             val result = userRepository.updateUserStatus(uid, estado)
@@ -152,7 +137,7 @@ class UsersViewModel : ViewModel() {
             }
 
             result.onFailure {
-                _errorMessage.value = it.message
+                _errorMessage.value = it.message ?: "No se pudo actualizar el estado del usuario."
             }
 
             _isLoading.value = false
@@ -163,5 +148,3 @@ class UsersViewModel : ViewModel() {
         _operationSuccess.value = null
     }
 }
-
-

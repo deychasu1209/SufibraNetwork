@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,7 +73,7 @@ fun UsersListScreen(
         ) {
             BackTopBar(
                 title = "Gestión de usuarios",
-                navController = navController,
+                navController = navController
             )
 
             LazyColumn(
@@ -112,15 +113,26 @@ fun UsersListScreen(
                 errorMessage?.let { message ->
                     item {
                         Card(
+                            modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
                                 containerColor = colorScheme.errorContainer
-                            )
+                            ),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
                         ) {
-                            Text(
-                                text = message,
+                            Column(
                                 modifier = Modifier.padding(16.dp),
-                                color = colorScheme.onErrorContainer
-                            )
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(
+                                    text = "No se pudo completar la acción",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = colorScheme.onErrorContainer
+                                )
+                                Text(
+                                    text = message,
+                                    color = colorScheme.onErrorContainer
+                                )
+                            }
                         }
                     }
                 }
@@ -132,7 +144,7 @@ fun UsersListScreen(
                             message = "Crea un administrador o técnico para comenzar a gestionar accesos."
                         )
                     }
-                } else {
+                } else if (!isLoading) {
                     items(users, key = { it.idUsuario }) { user ->
                         UserCard(
                             user = user,
@@ -158,8 +170,10 @@ fun UsersListScreen(
 
                 AlertDialog(
                     onDismissRequest = {
-                        selectedUser = null
-                        newStatus = null
+                        if (!isLoading) {
+                            selectedUser = null
+                            newStatus = null
+                        }
                     },
                     title = {
                         Text(if (enableUser) "Activar usuario" else "Desactivar usuario")
@@ -182,9 +196,17 @@ fun UsersListScreen(
                                 )
                                 selectedUser = null
                                 newStatus = null
-                            }
+                            },
+                            enabled = !isLoading
                         ) {
-                            Text("Confirmar")
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Confirmar")
+                            }
                         }
                     },
                     dismissButton = {
@@ -192,7 +214,8 @@ fun UsersListScreen(
                             onClick = {
                                 selectedUser = null
                                 newStatus = null
-                            }
+                            },
+                            enabled = !isLoading
                         ) {
                             Text("Cancelar")
                         }
