@@ -59,7 +59,7 @@ fun ClientForm(
         OutlinedTextField(
             value = nombresApellidos,
             onValueChange = onNombresApellidosChange,
-            label = { Text("Nombre completo") },
+            label = { Text("Nombre y apellidos") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -82,7 +82,7 @@ fun ClientForm(
         OutlinedTextField(
             value = direccion,
             onValueChange = onDireccionChange,
-            label = { Text("Direccion") },
+            label = { Text("Dirección") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -140,7 +140,7 @@ fun ClientForm(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_ubicacion),
-                        contentDescription = "Seleccionar ubicacion",
+                        contentDescription = "Seleccionar ubicación",
                         tint = colorScheme.primary
                     )
                 }
@@ -164,7 +164,7 @@ fun ClientForm(
         )
 
         Text(
-            text = "Los campos de referencia, caja NAP, puerto NAP, Link Maps y foto pueden quedar vacios.",
+            text = "El DNI debe tener 8 dígitos y el celular 9. Los campos de referencia, caja NAP, puerto NAP, Link Maps y foto pueden quedar vacíos.",
             style = MaterialTheme.typography.bodySmall,
             color = colorScheme.onSurfaceVariant
         )

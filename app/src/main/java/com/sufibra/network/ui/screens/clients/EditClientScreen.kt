@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -122,16 +124,46 @@ fun EditClientScreen(
                     puertoNap = puertoNap,
                     linkMaps = linkMaps,
                     fotoFachada = fotoFachada,
-                    onNombresApellidosChange = { nombresApellidos = it },
-                    onDniChange = { dni = it },
-                    onCelularChange = { celular = it },
-                    onDireccionChange = { direccion = it },
-                    onReferenciaChange = { referencia = it },
-                    onZonaChange = { zona = it },
-                    onCajaNapChange = { cajaNap = it },
-                    onPuertoNapChange = { puertoNap = it },
-                    onLinkMapsChange = { linkMaps = it },
-                    onFotoFachadaChange = { fotoFachada = it }
+                    onNombresApellidosChange = {
+                        nombresApellidos = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onDniChange = {
+                        dni = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onCelularChange = {
+                        celular = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onDireccionChange = {
+                        direccion = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onReferenciaChange = {
+                        referencia = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onZonaChange = {
+                        zona = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onCajaNapChange = {
+                        cajaNap = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onPuertoNapChange = {
+                        puertoNap = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onLinkMapsChange = {
+                        linkMaps = it
+                        if (errorMessage != null) viewModel.clearError()
+                    },
+                    onFotoFachadaChange = {
+                        fotoFachada = it
+                        if (errorMessage != null) viewModel.clearError()
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -170,10 +202,18 @@ fun EditClientScreen(
 
                 errorMessage?.let {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = it,
-                        color = colorScheme.error
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = it,
+                            modifier = Modifier.padding(16.dp),
+                            color = colorScheme.onErrorContainer
+                        )
+                    }
                 }
             }
         }

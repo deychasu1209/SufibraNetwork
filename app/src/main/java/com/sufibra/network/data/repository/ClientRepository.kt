@@ -9,6 +9,17 @@ class ClientRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val clientsCollection = firestore.collection("clients")
 
+    private suspend fun isDuplicateDni(dni: String, excludeClientId: String? = null): Boolean {
+        val snapshot = clientsCollection
+            .whereEqualTo("dni", dni)
+            .get()
+            .await()
+
+        return snapshot.documents.any { document ->
+            document.id != excludeClientId
+        }
+    }
+
     suspend fun getAllClients(): Result<List<Client>> {
         return try {
             val snapshot = clientsCollection.get().await()
@@ -42,6 +53,10 @@ class ClientRepository {
 
     suspend fun createClient(client: Client): Result<Unit> {
         return try {
+            if (isDuplicateDni(client.dni)) {
+                return Result.failure(Exception("Ya existe un cliente registrado con ese DNI."))
+            }
+
             val document = clientsCollection.document()
             val clientToSave = client.copy(
                 idCliente = document.id,
@@ -57,6 +72,10 @@ class ClientRepository {
 
     suspend fun updateClient(client: Client): Result<Unit> {
         return try {
+            if (isDuplicateDni(client.dni, client.idCliente)) {
+                return Result.failure(Exception("Ya existe un cliente registrado con ese DNI."))
+            }
+
             clientsCollection
                 .document(client.idCliente)
                 .set(client)
