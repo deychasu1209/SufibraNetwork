@@ -33,6 +33,8 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.viewmodel.EventViewModel
 import kotlinx.coroutines.launch
 
@@ -50,6 +52,7 @@ fun CreateInstallationScreen(navController: NavController) {
 
     var expanded by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         containerColor = colorScheme.background
@@ -108,7 +111,10 @@ fun CreateInstallationScreen(navController: NavController) {
 
                 OutlinedTextField(
                     value = direccion,
-                    onValueChange = { direccion = it },
+                    onValueChange = {
+                        direccion = it
+                        if (feedbackMessage != null) feedbackMessage = null
+                    },
                     label = { Text("Dirección referencial") },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -117,7 +123,10 @@ fun CreateInstallationScreen(navController: NavController) {
 
                 OutlinedTextField(
                     value = descripcionExtra,
-                    onValueChange = { descripcionExtra = it },
+                    onValueChange = {
+                        descripcionExtra = it
+                        if (feedbackMessage != null) feedbackMessage = null
+                    },
                     label = { Text("Datos adicionales del solicitante") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
@@ -127,9 +136,13 @@ fun CreateInstallationScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-                        if (direccion.isBlank()) return@Button
+                        if (direccion.isBlank()) {
+                            feedbackMessage = "La dirección referencial es obligatoria para registrar la instalación."
+                            return@Button
+                        }
 
                         isLoading = true
+                        feedbackMessage = null
 
                         scope.launch {
                             val currentUser = FirebaseAuth.getInstance().currentUser
@@ -150,10 +163,17 @@ fun CreateInstallationScreen(navController: NavController) {
                                 administradorId = currentUser?.uid
                             )
 
-                            viewModel.createEvent(event)
+                            val result = viewModel.createEvent(event)
+
+                            result.onSuccess {
+                                navController.popBackStack()
+                            }
+
+                            result.onFailure {
+                                feedbackMessage = it.message ?: "No se pudo registrar la instalación. Inténtalo nuevamente."
+                            }
 
                             isLoading = false
-                            navController.popBackStack()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -166,6 +186,14 @@ fun CreateInstallationScreen(navController: NavController) {
                     } else {
                         Text("Registrar Instalación")
                     }
+                }
+
+                feedbackMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FeedbackMessageCard(
+                        message = message,
+                        type = FeedbackMessageType.ERROR
+                    )
                 }
 
             }

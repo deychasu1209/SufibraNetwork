@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +47,8 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
@@ -65,6 +68,7 @@ fun TechnicianEventDetailScreen(
     val viewModel: EventViewModel = viewModel()
     val events by viewModel.availableEvents.collectAsState()
     val client by viewModel.selectedClient.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     var clientExpanded by remember { mutableStateOf(false) }
     var showTakeEventDialog by remember { mutableStateOf(false) }
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -82,10 +86,12 @@ fun TechnicianEventDetailScreen(
         when (takeEventSuccess) {
             true -> {
                 viewModel.clearTakeEventState()
+                showTakeEventDialog = false
                 navController.navigate(Screen.TechnicianCurrentJob.route)
             }
             false -> {
                 viewModel.clearTakeEventState()
+                showTakeEventDialog = false
                 shouldNavigateToCurrentJob = errorMessage?.contains("ya tienes uno activo", ignoreCase = true) == true
                 showRestrictionDialog = true
             }
@@ -121,6 +127,8 @@ fun TechnicianEventDetailScreen(
                         iconResId = R.drawable.ic_tomar,
                         containerColor = NaranjaTomado,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
+                        enabled = !isLoading,
+                        isLoading = isLoading,
                         onClick = {
                             showTakeEventDialog = true
                         }
@@ -202,6 +210,13 @@ fun TechnicianEventDetailScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = colorScheme.onSurfaceVariant
                     )
+
+                    if (isLoading) {
+                        FeedbackMessageCard(
+                            message = "Estamos registrando la toma del evento. Espera un momento.",
+                            type = FeedbackMessageType.INFO
+                        )
+                    }
 
                     Card(
                         shape = RoundedCornerShape(16.dp),
@@ -473,7 +488,9 @@ fun TechnicianEventDetailScreen(
     if (showTakeEventDialog && event != null) {
         AlertDialog(
             onDismissRequest = {
-                showTakeEventDialog = false
+                if (!isLoading) {
+                    showTakeEventDialog = false
+                }
             },
             title = {
                 Text("Confirmar accion")
@@ -490,17 +507,26 @@ fun TechnicianEventDetailScreen(
                             ?.uid ?: return@TextButton
 
                         viewModel.takeEvent(event, technicianId)
-                        showTakeEventDialog = false
                     }
+                    ,
+                    enabled = !isLoading
                 ) {
-                    Text("Confirmar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Confirmar")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
                         showTakeEventDialog = false
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
                     Text("Cancelar")
                 }

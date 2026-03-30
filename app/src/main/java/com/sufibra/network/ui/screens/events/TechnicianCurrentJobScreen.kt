@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +47,8 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
@@ -65,11 +68,13 @@ fun TechnicianCurrentJobScreen(
     val currentEvent by viewModel.currentTechnicianEvent.collectAsState()
     val client by viewModel.selectedClient.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     val technicianId = FirebaseAuth.getInstance().currentUser?.uid
     val startEventSuccess by viewModel.startEventSuccess.collectAsState()
     var showStartDialog by remember { mutableStateOf(false) }
     var showStartErrorDialog by remember { mutableStateOf(false) }
     var clientExpanded by remember { mutableStateOf(false) }
+    var actionSuccessMessage by remember { mutableStateOf<String?>(null) }
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
 
@@ -84,9 +89,12 @@ fun TechnicianCurrentJobScreen(
             true -> {
                 technicianId?.let { viewModel.loadCurrentTechnicianEvent(it) }
                 viewModel.clearStartEventState()
+                showStartDialog = false
+                actionSuccessMessage = "El trabajo ya está en proceso. Puedes continuar con la atención."
             }
             false -> {
                 viewModel.clearStartEventState()
+                showStartDialog = false
                 showStartErrorDialog = true
             }
             null -> Unit
@@ -138,6 +146,8 @@ fun TechnicianCurrentJobScreen(
                         iconResId = actionIcon,
                         containerColor = actionColor,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
+                        enabled = !isLoading,
+                        isLoading = isLoading && currentEvent?.estadoEvento == "TOMADO",
                         onClick = {
                             when (currentEvent!!.estadoEvento) {
                                 "TOMADO" -> showStartDialog = true
@@ -176,6 +186,13 @@ fun TechnicianCurrentJobScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = colorScheme.onSurfaceVariant
                 )
+
+                actionSuccessMessage?.let { message ->
+                    FeedbackMessageCard(
+                        message = message,
+                        type = FeedbackMessageType.SUCCESS
+                    )
+                }
 
                 if (currentEvent == null) {
                     CurrentJobEmptyState()
@@ -516,7 +533,9 @@ fun TechnicianCurrentJobScreen(
     if (showStartDialog && currentEvent != null) {
         AlertDialog(
             onDismissRequest = {
-                showStartDialog = false
+                if (!isLoading) {
+                    showStartDialog = false
+                }
             },
             title = {
                 Text("Confirmar accion")
@@ -528,17 +547,25 @@ fun TechnicianCurrentJobScreen(
                 TextButton(
                     onClick = {
                         viewModel.startEvent(currentEvent!!.idEvento)
-                        showStartDialog = false
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
-                    Text("Confirmar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Confirmar")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
                         showStartDialog = false
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
                     Text("Cancelar")
                 }

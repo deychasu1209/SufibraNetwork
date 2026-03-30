@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,6 +26,8 @@ fun TechnicianStickyActionBar(
     onClick: () -> Unit,
     containerColor: Color = MaterialTheme.colorScheme.primary,
     contentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -46,18 +49,27 @@ fun TechnicianStickyActionBar(
                 containerColor = containerColor,
                 contentColor = contentColor
             ),
+            enabled = enabled && !isLoading,
             elevation = ButtonDefaults.buttonElevation(
                 defaultElevation = 6.dp,
                 pressedElevation = 8.dp
             )
         ) {
-            Icon(
-                painter = painterResource(iconResId),
-                contentDescription = null,
-                tint = contentColor,
-                modifier = Modifier.size(20.dp)
-            )
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = contentColor,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    painter = painterResource(iconResId),
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+            }
             Text(
                 text = buttonText,
                 style = MaterialTheme.typography.titleMedium

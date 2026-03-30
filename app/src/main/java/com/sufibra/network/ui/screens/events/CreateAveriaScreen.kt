@@ -52,6 +52,8 @@ import com.sufibra.network.R
 import com.sufibra.network.domain.model.Client
 import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.viewmodel.EventViewModel
 import kotlinx.coroutines.launch
 
@@ -73,6 +75,7 @@ fun CreateAveriaScreen(navController: NavController) {
     var clientDetailExpanded by remember { mutableStateOf(false) }
 
     var isLoading by remember { mutableStateOf(false) }
+    var feedbackMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadClients()
@@ -164,6 +167,7 @@ fun CreateAveriaScreen(navController: NavController) {
                                     selectedClient = client
                                     clientDetailExpanded = false
                                     expandedClient = false
+                                    if (feedbackMessage != null) feedbackMessage = null
                                 }
                             )
                         }
@@ -186,7 +190,10 @@ fun CreateAveriaScreen(navController: NavController) {
 
                 OutlinedTextField(
                     value = descripcion,
-                    onValueChange = { descripcion = it },
+                    onValueChange = {
+                        descripcion = it
+                        if (feedbackMessage != null) feedbackMessage = null
+                    },
                     label = { Text("Descripción de la avería") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
@@ -196,9 +203,13 @@ fun CreateAveriaScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-                        if (selectedClient == null || descripcion.isBlank()) return@Button
+                        if (selectedClient == null || descripcion.isBlank()) {
+                            feedbackMessage = "Selecciona un cliente y completa la descripción para registrar la avería."
+                            return@Button
+                        }
 
                         isLoading = true
+                        feedbackMessage = null
 
                         scope.launch {
                             val currentUser = FirebaseAuth.getInstance().currentUser
@@ -213,10 +224,17 @@ fun CreateAveriaScreen(navController: NavController) {
                                 administradorId = currentUser?.uid
                             )
 
-                            viewModel.createEvent(event)
+                            val result = viewModel.createEvent(event)
+
+                            result.onSuccess {
+                                navController.popBackStack()
+                            }
+
+                            result.onFailure {
+                                feedbackMessage = it.message ?: "No se pudo registrar la avería. Inténtalo nuevamente."
+                            }
 
                             isLoading = false
-                            navController.popBackStack()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -229,6 +247,14 @@ fun CreateAveriaScreen(navController: NavController) {
                     } else {
                         Text("Registrar Avería")
                     }
+                }
+
+                feedbackMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FeedbackMessageCard(
+                        message = message,
+                        type = FeedbackMessageType.ERROR
+                    )
                 }
 
             }

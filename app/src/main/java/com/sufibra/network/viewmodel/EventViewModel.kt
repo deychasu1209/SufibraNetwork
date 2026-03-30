@@ -97,11 +97,14 @@ class EventViewModel : ViewModel() {
 
     fun takeEvent(event: Event, technicianId: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
             val activeCheck = repository.getActiveEventForTechnician(technicianId)
 
             if (activeCheck.getOrNull() != null) {
                 _errorMessage.value = "No se pudo tomar el evento porque ya tienes uno activo."
                 _takeEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
@@ -118,6 +121,8 @@ class EventViewModel : ViewModel() {
                 _errorMessage.value = it.message ?: "No se pudo tomar el evento."
                 _takeEventSuccess.value = false
             }
+
+            _isLoading.value = false
         }
     }
 
@@ -190,11 +195,14 @@ class EventViewModel : ViewModel() {
 
     fun startEvent(eventId: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
             val technicianId = FirebaseAuth.getInstance().currentUser?.uid
 
             if (technicianId.isNullOrBlank()) {
                 _errorMessage.value = "No se pudo identificar al técnico actual."
                 _startEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
@@ -215,6 +223,8 @@ class EventViewModel : ViewModel() {
                 _errorMessage.value = it.message ?: "No se pudo iniciar el evento."
                 _startEventSuccess.value = false
             }
+
+            _isLoading.value = false
         }
     }
 
@@ -228,17 +238,21 @@ class EventViewModel : ViewModel() {
         observaciones: String?
     ) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
             val technicianId = FirebaseAuth.getInstance().currentUser?.uid
 
             if (technicianId.isNullOrBlank()) {
                 _errorMessage.value = "No se pudo identificar al técnico actual."
                 _finalizeEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
             if (solucionAplicada.isBlank()) {
                 _errorMessage.value = "La solución aplicada es obligatoria"
                 _finalizeEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
@@ -261,6 +275,8 @@ class EventViewModel : ViewModel() {
                 _errorMessage.value = it.message ?: "No se pudo finalizar el evento."
                 _finalizeEventSuccess.value = false
             }
+
+            _isLoading.value = false
         }
     }
 
@@ -271,17 +287,21 @@ class EventViewModel : ViewModel() {
         client: Client
     ) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
             val technicianId = FirebaseAuth.getInstance().currentUser?.uid
 
             if (technicianId.isNullOrBlank()) {
                 _errorMessage.value = "No se pudo identificar al técnico actual."
                 _finalizeEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
             if (solucionAplicada.isBlank()) {
                 _errorMessage.value = "La solución aplicada es obligatoria"
                 _finalizeEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
@@ -289,6 +309,7 @@ class EventViewModel : ViewModel() {
             if (clientValidationError != null) {
                 _errorMessage.value = clientValidationError
                 _finalizeEventSuccess.value = false
+                _isLoading.value = false
                 return@launch
             }
 
@@ -312,6 +333,8 @@ class EventViewModel : ViewModel() {
                 _errorMessage.value = it.message ?: "No se pudo finalizar la instalación."
                 _finalizeEventSuccess.value = false
             }
+
+            _isLoading.value = false
         }
     }
 

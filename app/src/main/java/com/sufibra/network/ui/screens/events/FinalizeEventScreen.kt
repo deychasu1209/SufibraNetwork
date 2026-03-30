@@ -47,6 +47,8 @@ import com.sufibra.network.R
 import com.sufibra.network.domain.model.Client
 import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.clients.ClientForm
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.theme.AmarilloMedio
 import com.sufibra.network.ui.theme.AzulPrincipal
 import com.sufibra.network.ui.theme.CelesteBajo
@@ -182,6 +184,7 @@ fun FinalizeEventScreen(
                                 onValueChange = {
                                     solucionAplicada = it
                                     if (it.isNotBlank()) localFormError = null
+                                    if (errorMessage != null) viewModel.clearError()
                                 },
                                 label = { Text("Solución aplicada") },
                                 modifier = Modifier.fillMaxWidth(),
@@ -195,7 +198,10 @@ fun FinalizeEventScreen(
 
                             OutlinedTextField(
                                 value = observaciones,
-                                onValueChange = { observaciones = it },
+                                onValueChange = {
+                                    observaciones = it
+                                    if (errorMessage != null) viewModel.clearError()
+                                },
                                 label = { Text("Observaciones (opcional)") },
                                 modifier = Modifier.fillMaxWidth(),
                                 minLines = 3,
@@ -221,16 +227,46 @@ fun FinalizeEventScreen(
                                     puertoNap = puertoNap,
                                     linkMaps = linkMaps,
                                     fotoFachada = fotoFachada,
-                                    onNombresApellidosChange = { nombresApellidos = it },
-                                    onDniChange = { dni = it },
-                                    onCelularChange = { celular = it },
-                                    onDireccionChange = { direccion = it },
-                                    onReferenciaChange = { referencia = it },
-                                    onZonaChange = { zona = it },
-                                    onCajaNapChange = { cajaNap = it },
-                                    onPuertoNapChange = { puertoNap = it },
-                                    onLinkMapsChange = { linkMaps = it },
-                                    onFotoFachadaChange = { fotoFachada = it }
+                                    onNombresApellidosChange = {
+                                        nombresApellidos = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onDniChange = {
+                                        dni = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onCelularChange = {
+                                        celular = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onDireccionChange = {
+                                        direccion = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onReferenciaChange = {
+                                        referencia = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onZonaChange = {
+                                        zona = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onCajaNapChange = {
+                                        cajaNap = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onPuertoNapChange = {
+                                        puertoNap = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onLinkMapsChange = {
+                                        linkMaps = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    },
+                                    onFotoFachadaChange = {
+                                        fotoFachada = it
+                                        if (errorMessage != null) viewModel.clearError()
+                                    }
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -245,17 +281,28 @@ fun FinalizeEventScreen(
                         }
 
                         localFormError?.let { message ->
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = colorScheme.errorContainer
-                                )
-                            ) {
-                                Text(
-                                    text = message,
-                                    modifier = Modifier.padding(16.dp),
-                                    color = colorScheme.onErrorContainer
-                                )
-                            }
+                            FeedbackMessageCard(
+                                message = message,
+                                type = FeedbackMessageType.ERROR
+                            )
+                        }
+
+                        if (isLoading) {
+                            FeedbackMessageCard(
+                                message = if (isInstallation && showClientStep) {
+                                    "Estamos registrando el cliente y cerrando la instalación."
+                                } else {
+                                    "Estamos procesando el cierre del evento."
+                                },
+                                type = FeedbackMessageType.INFO
+                            )
+                        }
+
+                        errorMessage?.let { message ->
+                            FeedbackMessageCard(
+                                message = message,
+                                type = FeedbackMessageType.ERROR
+                            )
                         }
 
                         Button(
@@ -273,9 +320,17 @@ fun FinalizeEventScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = buttonColor
-                            )
+                            ),
+                            enabled = !isLoading
                         ) {
-                            Text(buttonText)
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(buttonText)
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -300,7 +355,9 @@ fun FinalizeEventScreen(
 
         AlertDialog(
             onDismissRequest = {
-                showFinalizeDialog = false
+                if (!isLoading) {
+                    showFinalizeDialog = false
+                }
             },
             title = {
                 Text(if (isInstallationConfirmation) "Confirmar cierre e instalación" else "Confirmar cierre")
@@ -343,43 +400,27 @@ fun FinalizeEventScreen(
                                 observaciones = observaciones.ifBlank { null }
                             )
                         }
-
-                        showFinalizeDialog = false
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
-                    Text("Confirmar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Confirmar")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = {
                         showFinalizeDialog = false
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
                     Text("Cancelar")
-                }
-            }
-        )
-    }
-
-    errorMessage?.let { message ->
-        AlertDialog(
-            onDismissRequest = {
-                viewModel.clearError()
-            },
-            title = {
-                Text("Aviso")
-            },
-            text = {
-                Text(message)
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.clearError()
-                    }
-                ) {
-                    Text("Aceptar")
                 }
             }
         )

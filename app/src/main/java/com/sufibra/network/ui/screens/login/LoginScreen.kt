@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sufibra.network.R
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AzulPrincipal
 import com.sufibra.network.ui.theme.AzulPrincipalOscuro
@@ -130,9 +132,9 @@ fun LoginScreen(navController: NavController) {
 
                     recoveryErrorMessage?.let {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = it,
-                            color = colorScheme.error
+                        FeedbackMessageCard(
+                            message = it,
+                            type = FeedbackMessageType.ERROR
                         )
                     }
                 }
@@ -339,19 +341,21 @@ fun LoginScreen(navController: NavController) {
                             color = colorScheme.primary,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.clickable {
-                                recoveryEmail = email
-                                showRecoveryDialog = true
-                                viewModel.clearRecoveryError()
-                                viewModel.clearRecoverySuccess()
+                                if (!isLoading && !isRecoveryLoading) {
+                                    recoveryEmail = email
+                                    showRecoveryDialog = true
+                                    viewModel.clearRecoveryError()
+                                    viewModel.clearRecoverySuccess()
+                                }
                             }
                         )
                     }
 
                     errorMessage?.let {
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = it,
-                            color = colorScheme.error
+                        FeedbackMessageCard(
+                            message = it,
+                            type = FeedbackMessageType.ERROR
                         )
                     }
                 }

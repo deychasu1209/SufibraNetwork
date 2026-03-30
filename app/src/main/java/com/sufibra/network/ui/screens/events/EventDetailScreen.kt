@@ -49,6 +49,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
+import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
@@ -71,6 +73,7 @@ fun EventDetailScreen(
     val viewModel: EventViewModel = viewModel()
     val event by viewModel.selectedEvent.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
     val client by viewModel.selectedClient.collectAsState()
     var clientExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -80,6 +83,7 @@ fun EventDetailScreen(
     val colorScheme = MaterialTheme.colorScheme
     var showCancelDialog by remember { mutableStateOf(false) }
     var showReleaseDialog by remember { mutableStateOf(false) }
+    var actionFeedbackMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(eventId) {
         viewModel.loadEventById(eventId)
@@ -93,12 +97,14 @@ fun EventDetailScreen(
         if (cancelEventSuccess == true) {
             viewModel.clearCancelEventState()
             showCancelDialog = false
+            actionFeedbackMessage = "El evento fue cancelado correctamente y se conservó su trazabilidad."
         }
     }
     LaunchedEffect(releaseEventSuccess) {
         if (releaseEventSuccess == true) {
             viewModel.clearReleaseEventState()
             showReleaseDialog = false
+            actionFeedbackMessage = "El evento volvió a quedar disponible para la operación."
         }
     }
 
@@ -221,6 +227,22 @@ fun EventDetailScreen(
                         val canCancelEvent = e.estadoEvento == "DISPONIBLE" || e.estadoEvento == "TOMADO"
                         val canReleaseEvent = e.estadoEvento == "TOMADO"
 
+                        actionFeedbackMessage?.let { message ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            FeedbackMessageCard(
+                                message = message,
+                                type = FeedbackMessageType.SUCCESS
+                            )
+                        }
+
+                        errorMessage?.let { message ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            FeedbackMessageCard(
+                                message = message,
+                                type = FeedbackMessageType.ERROR
+                            )
+                        }
+
                         if (canEditEvent || canCancelEvent || canReleaseEvent) {
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -268,7 +290,8 @@ fun EventDetailScreen(
                                                 onClick = {
                                                     navController.navigate(Screen.EditEvent.createRoute(e.idEvento))
                                                 },
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier.weight(1f),
+                                                enabled = !isLoading
                                             ) {
                                                 Text("Editar evento")
                                             }
@@ -277,7 +300,8 @@ fun EventDetailScreen(
                                         if (canCancelEvent) {
                                             OutlinedButton(
                                                 onClick = { showCancelDialog = true },
-                                                modifier = Modifier.weight(1f)
+                                                modifier = Modifier.weight(1f),
+                                                enabled = !isLoading
                                             ) {
                                                 Text("Cancelar evento")
                                             }
@@ -289,7 +313,8 @@ fun EventDetailScreen(
 
                                         OutlinedButton(
                                             onClick = { showReleaseDialog = true },
-                                            modifier = Modifier.fillMaxWidth()
+                                            modifier = Modifier.fillMaxWidth(),
+                                            enabled = !isLoading
                                         ) {
                                             Text("Liberar evento")
                                         }
@@ -628,7 +653,11 @@ fun EventDetailScreen(
 
     if (showCancelDialog && event != null) {
         AlertDialog(
-            onDismissRequest = { showCancelDialog = false },
+            onDismissRequest = {
+                if (!isLoading) {
+                    showCancelDialog = false
+                }
+            },
             title = {
                 Text("Cancelar evento")
             },
@@ -639,14 +668,24 @@ fun EventDetailScreen(
                 TextButton(
                     onClick = {
                         viewModel.cancelEvent(event!!.idEvento)
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
-                    Text("Confirmar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Confirmar")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showCancelDialog = false }
+                    ,
+                    enabled = !isLoading
                 ) {
                     Text("Volver")
                 }
@@ -656,7 +695,11 @@ fun EventDetailScreen(
 
     if (showReleaseDialog && event != null) {
         AlertDialog(
-            onDismissRequest = { showReleaseDialog = false },
+            onDismissRequest = {
+                if (!isLoading) {
+                    showReleaseDialog = false
+                }
+            },
             title = {
                 Text("Liberar evento")
             },
@@ -667,14 +710,24 @@ fun EventDetailScreen(
                 TextButton(
                     onClick = {
                         viewModel.releaseEvent(event!!.idEvento)
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
-                    Text("Confirmar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Confirmar")
+                    }
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showReleaseDialog = false }
+                    ,
+                    enabled = !isLoading
                 ) {
                     Text("Volver")
                 }
