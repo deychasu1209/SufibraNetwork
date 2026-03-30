@@ -61,6 +61,9 @@ class EventViewModel : ViewModel() {
     private val _cancelEventSuccess = MutableStateFlow<Boolean?>(null)
     val cancelEventSuccess: StateFlow<Boolean?> = _cancelEventSuccess
 
+    private val _releaseEventSuccess = MutableStateFlow<Boolean?>(null)
+    val releaseEventSuccess: StateFlow<Boolean?> = _releaseEventSuccess
+
     suspend fun createEvent(event: Event): Result<Unit> {
         return repository.createEvent(event)
     }
@@ -391,12 +394,49 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    fun releaseEvent(eventId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val adminId = FirebaseAuth.getInstance().currentUser?.uid
+            if (adminId.isNullOrBlank()) {
+                _errorMessage.value = "No se pudo identificar al administrador que libera el evento"
+                _releaseEventSuccess.value = false
+                _isLoading.value = false
+                return@launch
+            }
+
+            val result = repository.releaseTakenEvent(
+                eventId = eventId,
+                liberadoPor = adminId
+            )
+
+            result.onSuccess {
+                _releaseEventSuccess.value = true
+                loadEventById(eventId)
+                loadEvents()
+                loadAvailableEvents()
+            }
+
+            result.onFailure {
+                _errorMessage.value = it.message ?: "No se pudo liberar el evento."
+                _releaseEventSuccess.value = false
+            }
+
+            _isLoading.value = false
+        }
+    }
+
     fun clearUpdateEventState() {
         _updateEventSuccess.value = null
     }
 
     fun clearCancelEventState() {
         _cancelEventSuccess.value = null
+    }
+
+    fun clearReleaseEventState() {
+        _releaseEventSuccess.value = null
     }
 
     private fun validateClientForInstallation(client: Client): String? {

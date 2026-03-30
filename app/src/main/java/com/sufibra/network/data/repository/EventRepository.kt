@@ -381,4 +381,46 @@ class EventRepository {
         }
     }
 
+    suspend fun releaseTakenEvent(
+        eventId: String,
+        liberadoPor: String
+    ): Result<Unit> {
+        return try {
+            firestore.runTransaction { transaction ->
+                val eventRef = eventsCollection.document(eventId)
+                val snapshot = transaction.get(eventRef)
+                val currentState = snapshot.getString("estadoEvento")
+                val technicianId = snapshot.getString("tecnicoId")
+
+                if (currentState != "TOMADO") {
+                    throw IllegalStateException("Solo se pueden liberar eventos en estado TOMADO")
+                }
+
+                if (technicianId.isNullOrBlank()) {
+                    throw IllegalStateException("No hay un técnico asignado para liberar este evento.")
+                }
+
+                transaction.update(
+                    eventRef,
+                    mapOf(
+                        "estadoEvento" to "DISPONIBLE",
+                        "tecnicoId" to null,
+                        "fechaToma" to null,
+                        "fechaLiberacion" to System.currentTimeMillis(),
+                        "liberadoPor" to liberadoPor
+                    )
+                )
+
+                transaction.update(
+                    usersCollection.document(technicianId),
+                    mapOf("disponible" to true)
+                )
+            }.await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
 }

@@ -12,6 +12,7 @@ data class Event(
     val fechaInicio: Long? = null,
     val fechaFinalizacion: Long? = null,
     val fechaCancelacion: Long? = null,
+    val fechaLiberacion: Long? = null,
 
     val solucionAplicada: String? = null,
     val observaciones: String? = null,
@@ -19,5 +20,6 @@ data class Event(
     val clienteId: String? = null,
     val tecnicoId: String? = null,
     val administradorId: String? = null,
-    val canceladoPor: String? = null
+    val canceladoPor: String? = null,
+    val liberadoPor: String? = null
 )

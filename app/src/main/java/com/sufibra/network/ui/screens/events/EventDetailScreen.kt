@@ -76,8 +76,10 @@ fun EventDetailScreen(
     val context = LocalContext.current
     val technician by viewModel.assignedTechnician.collectAsState()
     val cancelEventSuccess by viewModel.cancelEventSuccess.collectAsState()
+    val releaseEventSuccess by viewModel.releaseEventSuccess.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
     var showCancelDialog by remember { mutableStateOf(false) }
+    var showReleaseDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         viewModel.loadEventById(eventId)
@@ -91,6 +93,12 @@ fun EventDetailScreen(
         if (cancelEventSuccess == true) {
             viewModel.clearCancelEventState()
             showCancelDialog = false
+        }
+    }
+    LaunchedEffect(releaseEventSuccess) {
+        if (releaseEventSuccess == true) {
+            viewModel.clearReleaseEventState()
+            showReleaseDialog = false
         }
     }
 
@@ -211,8 +219,9 @@ fun EventDetailScreen(
 
                         val canEditEvent = e.estadoEvento == "DISPONIBLE"
                         val canCancelEvent = e.estadoEvento == "DISPONIBLE" || e.estadoEvento == "TOMADO"
+                        val canReleaseEvent = e.estadoEvento == "TOMADO"
 
-                        if (canEditEvent || canCancelEvent) {
+                        if (canEditEvent || canCancelEvent || canReleaseEvent) {
                             Spacer(modifier = Modifier.height(16.dp))
 
                             Card(
@@ -239,6 +248,8 @@ fun EventDetailScreen(
                                     Text(
                                         text = if (canEditEvent) {
                                             "Este evento aún puede ajustarse o cancelarse antes de que avance el flujo operativo."
+                                        } else if (canReleaseEvent) {
+                                            "Este evento fue tomado, pero todavía puede liberarse para que vuelva a quedar disponible sin perder trazabilidad."
                                         } else {
                                             "Este evento ya no puede editarse, pero todavía puede cancelarse porque no inició ejecución."
                                         },
@@ -270,6 +281,17 @@ fun EventDetailScreen(
                                             ) {
                                                 Text("Cancelar evento")
                                             }
+                                        }
+                                    }
+
+                                    if (canReleaseEvent) {
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        OutlinedButton(
+                                            onClick = { showReleaseDialog = true },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("Liberar evento")
                                         }
                                     }
                                 }
@@ -549,6 +571,29 @@ fun EventDetailScreen(
                                         )
                                     }
                                 }
+
+                                if (e.fechaLiberacion != null) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.ic_fecha),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = colorScheme.onSurfaceVariant
+                                        )
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Text(
+                                            text = "Fecha de liberación: ${formatDate(e.fechaLiberacion)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -602,6 +647,34 @@ fun EventDetailScreen(
             dismissButton = {
                 TextButton(
                     onClick = { showCancelDialog = false }
+                ) {
+                    Text("Volver")
+                }
+            }
+        )
+    }
+
+    if (showReleaseDialog && event != null) {
+        AlertDialog(
+            onDismissRequest = { showReleaseDialog = false },
+            title = {
+                Text("Liberar evento")
+            },
+            text = {
+                Text("¿Deseas liberar este evento? Volverá a estado DISPONIBLE para que otro técnico pueda tomarlo.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.releaseEvent(event!!.idEvento)
+                    }
+                ) {
+                    Text("Confirmar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showReleaseDialog = false }
                 ) {
                     Text("Volver")
                 }
