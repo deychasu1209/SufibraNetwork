@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.sufibra.network.R
 import com.sufibra.network.ui.navigation.Screen
 
@@ -31,11 +32,20 @@ fun TechnicianNavigationBar(navController: NavController) {
         containerColor = colorScheme.surface,
         contentColor = colorScheme.onSurfaceVariant
     ) {
+        fun navigateTo(route: String) {
+            navController.navigate(route) {
+                launchSingleTop = true
+                restoreState = true
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+            }
+        }
 
         NavigationBarItem(
             selected = currentRoute == Screen.TechnicianDashboard.route,
             onClick = {
-                navController.navigate(Screen.TechnicianDashboard.route)
+                navigateTo(Screen.TechnicianDashboard.route)
             },
             icon = {
                 Icon(
@@ -50,7 +60,7 @@ fun TechnicianNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = currentRoute == Screen.TechnicianAvailableEvents.route,
             onClick = {
-                navController.navigate(Screen.TechnicianAvailableEvents.route)
+                navigateTo(Screen.TechnicianAvailableEvents.route)
             },
             icon = {
                 Icon(
@@ -65,7 +75,7 @@ fun TechnicianNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = currentRoute == Screen.TechnicianMyJobs.route,
             onClick = {
-                navController.navigate(Screen.TechnicianMyJobs.route)
+                navigateTo(Screen.TechnicianMyJobs.route)
             },
             icon = {
                 Icon(
@@ -80,7 +90,7 @@ fun TechnicianNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = profileModuleSelected,
             onClick = {
-                navController.navigate(Screen.Profile.route)
+                navigateTo(Screen.Profile.route)
             },
             icon = {
                 Icon(

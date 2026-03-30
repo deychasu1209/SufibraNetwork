@@ -13,6 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -141,11 +143,18 @@ fun ChangePasswordScreen(
                     }
                 }
 
-                errorMessage?.let {
-                    Text(
-                        text = it,
-                        color = colorScheme.error
-                    )
+                errorMessage?.let { message ->
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = message,
+                            modifier = Modifier.padding(16.dp),
+                            color = colorScheme.onErrorContainer
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

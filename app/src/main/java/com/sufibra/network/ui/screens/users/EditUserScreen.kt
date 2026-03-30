@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -40,11 +42,21 @@ fun EditUserScreen(
     userId: String
 ) {
     val viewModel: UsersViewModel = viewModel()
+    val isLoading by viewModel.isLoading.collectAsState()
     val users by viewModel.users.collectAsState()
+    val operationSuccess by viewModel.operationSuccess.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         viewModel.loadUsers()
+    }
+
+    LaunchedEffect(operationSuccess) {
+        if (operationSuccess == true) {
+            viewModel.resetOperationState()
+            navController.popBackStack()
+        }
     }
 
     val user = users.find { it.idUsuario == userId }
@@ -166,11 +178,29 @@ fun EditUserScreen(
                                 zonaAsignada = zona.ifBlank { null }
                             )
                         )
-                        navController.popBackStack()
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading
                 ) {
-                    Text("Guardar cambios")
+                    if (isLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Text("Guardar cambios")
+                    }
+                }
+
+                errorMessage?.let { message ->
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = message,
+                            modifier = Modifier.padding(16.dp),
+                            color = colorScheme.onErrorContainer
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

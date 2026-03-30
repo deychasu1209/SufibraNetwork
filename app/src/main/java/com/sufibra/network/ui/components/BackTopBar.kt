@@ -32,7 +32,11 @@ fun BackTopBar(
         title = { Text(title) },
         navigationIcon = {
             IconButton(
-                onClick = { navController.popBackStack() },
+                onClick = {
+                    if (!navController.navigateUp()) {
+                        navController.popBackStack()
+                    }
+                },
                 modifier = Modifier
                     .clip(CircleShape)
                     .background(navigationIconContainerColor)
@@ -44,7 +48,7 @@ fun BackTopBar(
                 )
             }
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+        colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colorScheme.surface,
             titleContentColor = colorScheme.onSurface,
             navigationIconContentColor = colorScheme.onSurface

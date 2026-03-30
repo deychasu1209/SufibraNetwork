@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.sufibra.network.R
 import com.sufibra.network.ui.navigation.Screen
 
@@ -34,11 +35,20 @@ fun AdminNavigationBar(navController: NavController) {
         containerColor = colorScheme.surface,
         contentColor = colorScheme.onSurfaceVariant
     ) {
+        fun navigateTo(route: String) {
+            navController.navigate(route) {
+                launchSingleTop = true
+                restoreState = true
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+            }
+        }
 
         NavigationBarItem(
             selected = currentRoute == Screen.AdminDashboard.route,
             onClick = {
-                navController.navigate(Screen.AdminDashboard.route)
+                navigateTo(Screen.AdminDashboard.route)
             },
             icon = {
                 Icon(
@@ -53,7 +63,7 @@ fun AdminNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = currentRoute == Screen.EventsList.route,
             onClick = {
-                navController.navigate(Screen.EventsList.route)
+                navigateTo(Screen.EventsList.route)
             },
             icon = {
                 Icon(
@@ -68,7 +78,7 @@ fun AdminNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = currentRoute == Screen.UsersList.route,
             onClick = {
-                navController.navigate(Screen.UsersList.route)
+                navigateTo(Screen.UsersList.route)
             },
             icon = {
                 Icon(
@@ -83,7 +93,7 @@ fun AdminNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = clientsModuleSelected,
             onClick = {
-                navController.navigate(Screen.ClientsList.route)
+                navigateTo(Screen.ClientsList.route)
             },
             icon = {
                 Icon(
@@ -98,7 +108,7 @@ fun AdminNavigationBar(navController: NavController) {
         NavigationBarItem(
             selected = profileModuleSelected,
             onClick = {
-                navController.navigate(Screen.Profile.route)
+                navigateTo(Screen.Profile.route)
             },
             icon = {
                 Icon(
