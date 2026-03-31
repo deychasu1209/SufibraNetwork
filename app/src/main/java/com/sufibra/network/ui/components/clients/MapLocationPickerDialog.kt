@@ -3,7 +3,10 @@ package com.sufibra.network.ui.components.clients
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
@@ -29,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -120,21 +124,32 @@ fun MapLocationPickerDialog(
         ),
         label = "pin-shadow-alpha"
     )
+
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(initialTarget, 16f)
     }
+
     var hasLocationPermission by remember { mutableStateOf(context.hasLocationPermission()) }
+    var isLocationEnabled by remember { mutableStateOf(context.isLocationEnabled()) }
     var hasCenteredOnCurrentLocation by remember { mutableStateOf(false) }
     var locationHelpText by remember {
         mutableStateOf("Mueve el mapa y deja el pin sobre el punto exacto.")
     }
+    val canUseLocation = hasLocationPermission && isLocationEnabled
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (!hasLocationPermission) {
-            locationHelpText = "Activa la ubicación para centrar el mapa en tu posición actual."
+        isLocationEnabled = context.isLocationEnabled()
+        locationHelpText = when {
+            !hasLocationPermission ->
+                "Necesitamos permiso de ubicación para seleccionar el Link Maps correctamente."
+            !isLocationEnabled ->
+                "Activa la ubicación del dispositivo para poder elegir el punto exacto en el mapa."
+            else ->
+                "Mueve el mapa y deja el pin sobre el punto exacto."
         }
     }
 
@@ -154,15 +169,29 @@ fun MapLocationPickerDialog(
         useIntroPinAnimation = false
     }
 
-    LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission && !hasCenteredOnCurrentLocation) {
+    LaunchedEffect(hasLocationPermission, isLocationEnabled) {
+        if (!hasLocationPermission) {
+            locationHelpText =
+                "Necesitamos permiso de ubicación para seleccionar el Link Maps correctamente."
+            return@LaunchedEffect
+        }
+
+        if (!isLocationEnabled) {
+            locationHelpText =
+                "Activa la ubicación del dispositivo para poder elegir el punto exacto en el mapa."
+            return@LaunchedEffect
+        }
+
+        if (!hasCenteredOnCurrentLocation) {
             val currentLocation = context.getCurrentLatLng()
             if (currentLocation != null) {
                 cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocation, 18f))
                 hasCenteredOnCurrentLocation = true
-                locationHelpText = "Tu ubicación actual ya está centrada. Ajusta el pin si hace falta."
+                locationHelpText =
+                    "Tu ubicación actual ya está centrada. Ajusta el pin si hace falta."
             } else {
-                locationHelpText = "No se pudo obtener tu ubicación exacta. Puedes mover el mapa manualmente."
+                locationHelpText =
+                    "No se pudo obtener tu ubicación exacta todavía. Revisa el GPS e inténtalo nuevamente."
             }
         }
     }
@@ -178,7 +207,8 @@ fun MapLocationPickerDialog(
             Box(modifier = Modifier.fillMaxSize()) {
                 LocationPickerMap(
                     cameraPositionState = cameraPositionState,
-                    hasLocationPermission = hasLocationPermission
+                    hasLocationPermission = hasLocationPermission,
+                    isLocationEnabled = isLocationEnabled
                 )
 
                 Card(
@@ -210,6 +240,8 @@ fun MapLocationPickerDialog(
 
                 FilledTonalIconButton(
                     onClick = {
+                        isLocationEnabled = context.isLocationEnabled()
+
                         if (!hasLocationPermission) {
                             permissionLauncher.launch(
                                 arrayOf(
@@ -217,6 +249,13 @@ fun MapLocationPickerDialog(
                                     Manifest.permission.ACCESS_COARSE_LOCATION
                                 )
                             )
+                            return@FilledTonalIconButton
+                        }
+
+                        if (!isLocationEnabled) {
+                            locationHelpText =
+                                "Activa la ubicación del dispositivo para poder centrar el mapa en tu posición."
+                            context.openLocationSettings()
                             return@FilledTonalIconButton
                         }
 
@@ -231,7 +270,7 @@ fun MapLocationPickerDialog(
                                     "Mapa centrado en tu ubicación actual. Ajusta el pin si hace falta."
                             } else {
                                 locationHelpText =
-                                    "No se pudo obtener tu ubicación actual. Puedes mover el mapa manualmente."
+                                    "No se pudo obtener tu ubicación actual. Verifica el GPS e inténtalo nuevamente."
                             }
                         }
                     },
@@ -246,11 +285,91 @@ fun MapLocationPickerDialog(
                         contentColor = colorScheme.primary
                     )
                 ) {
-                    androidx.compose.material3.Icon(
+                    Icon(
                         painter = painterResource(id = R.drawable.ic_zona),
                         contentDescription = "Centrar en mi ubicación",
                         tint = colorScheme.primary
                     )
+                }
+
+                if (!canUseLocation) {
+                    Card(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(horizontal = 24.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.surface.copy(alpha = 0.98f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 22.dp, vertical = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Text(
+                                text = if (hasLocationPermission) {
+                                    "Activa la ubicación"
+                                } else {
+                                    "Permite la ubicación"
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = colorScheme.onSurface
+                            )
+
+                            Text(
+                                text = if (hasLocationPermission) {
+                                    "Para seleccionar el Link Maps correctamente debes encender la ubicación del dispositivo. Mientras esté apagada no se podrá usar este mapa."
+                                } else {
+                                    "Para seleccionar el Link Maps correctamente necesitamos permiso de ubicación. Sin ese permiso no se podrá usar este mapa."
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colorScheme.onSurfaceVariant
+                            )
+
+                            Button(
+                                onClick = {
+                                    if (hasLocationPermission) {
+                                        context.openLocationSettings()
+                                    } else {
+                                        permissionLauncher.launch(
+                                            arrayOf(
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                            )
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(vertical = 14.dp)
+                            ) {
+                                Text(
+                                    if (hasLocationPermission) {
+                                        "Activar ubicación"
+                                    } else {
+                                        "Conceder permiso"
+                                    }
+                                )
+                            }
+
+                            if (hasLocationPermission) {
+                                OutlinedButton(
+                                    onClick = {
+                                        isLocationEnabled = context.isLocationEnabled()
+                                        if (isLocationEnabled) {
+                                            locationHelpText =
+                                                "Ubicación activada. Ya puedes mover el mapa y elegir el punto exacto."
+                                            hasCenteredOnCurrentLocation = false
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(vertical = 14.dp)
+                                ) {
+                                    Text("Ya activé la ubicación")
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Box(
@@ -272,7 +391,7 @@ fun MapLocationPickerDialog(
                             )
                     )
 
-                    androidx.compose.material3.Icon(
+                    Icon(
                         painter = painterResource(id = R.drawable.ic_ubicacion),
                         contentDescription = null,
                         tint = colorScheme.primary,
@@ -308,6 +427,14 @@ fun MapLocationPickerDialog(
                             fontWeight = FontWeight.SemiBold
                         )
 
+                        if (!canUseLocation) {
+                            Text(
+                                text = "Activa la ubicación y concede el permiso para confirmar el punto.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colorScheme.onSurfaceVariant
+                            )
+                        }
+
                         Text(
                             text = "Lat ${selectedPoint.latitude.formatCoordinate()} · Lng ${selectedPoint.longitude.formatCoordinate()}",
                             style = MaterialTheme.typography.bodyMedium,
@@ -332,6 +459,7 @@ fun MapLocationPickerDialog(
                                         "https://www.google.com/maps/search/?api=1&query=${selectedPoint.latitude},${selectedPoint.longitude}"
                                     onLocationSelected(selectedMapsLink)
                                 },
+                                enabled = canUseLocation,
                                 modifier = Modifier.weight(1.35f),
                                 contentPadding = PaddingValues(vertical = 14.dp)
                             ) {
@@ -349,17 +477,18 @@ fun MapLocationPickerDialog(
 @Composable
 private fun LocationPickerMap(
     cameraPositionState: CameraPositionState,
-    hasLocationPermission: Boolean
+    hasLocationPermission: Boolean,
+    isLocationEnabled: Boolean
 ) {
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         properties = MapProperties(
-            isMyLocationEnabled = hasLocationPermission
+            isMyLocationEnabled = hasLocationPermission && isLocationEnabled
         ),
         uiSettings = MapUiSettings(
             compassEnabled = true,
-            myLocationButtonEnabled = hasLocationPermission,
+            myLocationButtonEnabled = hasLocationPermission && isLocationEnabled,
             zoomControlsEnabled = false
         )
     )
@@ -393,8 +522,22 @@ private fun Context.hasLocationPermission(): Boolean {
         ) == PackageManager.PERMISSION_GRANTED
 }
 
+private fun Context.isLocationEnabled(): Boolean {
+    val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+    return locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) == true ||
+        locationManager?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) == true
+}
+
+private fun Context.openLocationSettings() {
+    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    })
+}
+
 @SuppressLint("MissingPermission")
 private suspend fun Context.getCurrentLatLng(): LatLng? {
+    if (!isLocationEnabled()) return null
+
     val client = LocationServices.getFusedLocationProviderClient(this)
 
     client.lastLocation.await()?.let { lastLocation ->
