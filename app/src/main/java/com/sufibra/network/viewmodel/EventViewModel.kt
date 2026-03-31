@@ -67,15 +67,39 @@ class EventViewModel : ViewModel() {
     private val _releaseEventSuccess = MutableStateFlow<Boolean?>(null)
     val releaseEventSuccess: StateFlow<Boolean?> = _releaseEventSuccess
 
+    private var currentAdminStateFilter: String? = null
+    private var currentAdminTypeFilter: String? = null
+    private var currentAdminPriorityFilter: String? = null
+    private var currentAdminTechnicianFilter: String? = null
+
     suspend fun createEvent(event: Event): Result<Unit> {
         return repository.createEvent(event)
     }
 
-    fun loadEvents() {
+    fun loadEvents(
+        stateFilter: String? = currentAdminStateFilter,
+        typeFilter: String? = currentAdminTypeFilter,
+        priorityFilter: String? = currentAdminPriorityFilter,
+        technicianIdFilter: String? = currentAdminTechnicianFilter
+    ) {
         viewModelScope.launch {
-            val result = repository.getAllEvents()
+            currentAdminStateFilter = stateFilter
+            currentAdminTypeFilter = typeFilter
+            currentAdminPriorityFilter = priorityFilter
+            currentAdminTechnicianFilter = technicianIdFilter
+
+            val result = repository.getAdminEvents(
+                estadoEvento = currentAdminStateFilter,
+                tipoEvento = currentAdminTypeFilter,
+                prioridad = currentAdminPriorityFilter,
+                tecnicoId = currentAdminTechnicianFilter
+            )
+
             result.onSuccess {
                 _events.value = it
+            }
+            result.onFailure {
+                _errorMessage.value = it.message
             }
         }
     }
@@ -117,7 +141,6 @@ class EventViewModel : ViewModel() {
                 _takeEventSuccess.value = true
                 loadCurrentTechnicianEvent(technicianId)
                 loadAvailableEvents()
-                loadEvents()
             }
 
             result.onFailure {
@@ -231,9 +254,6 @@ class EventViewModel : ViewModel() {
             result.onSuccess {
                 _startEventSuccess.value = true
                 loadCurrentTechnicianEvent(technicianId)
-                loadEventById(eventId)
-                loadAvailableEvents()
-                loadEvents()
             }
 
             result.onFailure {
@@ -284,9 +304,6 @@ class EventViewModel : ViewModel() {
                 _finalizeEventSuccess.value = true
                 loadCurrentTechnicianEvent(technicianId)
                 loadTechnicianHistoryEvents(technicianId)
-                loadEventById(eventId)
-                loadAvailableEvents()
-                loadEvents()
             }
 
             result.onFailure {
@@ -343,9 +360,6 @@ class EventViewModel : ViewModel() {
                 _finalizeEventSuccess.value = true
                 loadCurrentTechnicianEvent(technicianId)
                 loadTechnicianHistoryEvents(technicianId)
-                loadEventById(eventId)
-                loadAvailableEvents()
-                loadEvents()
             }
 
             result.onFailure {

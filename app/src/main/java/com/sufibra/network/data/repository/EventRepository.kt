@@ -36,6 +36,36 @@ class EventRepository {
         }
     }
 
+    suspend fun getAdminEvents(
+        estadoEvento: String? = null,
+        tipoEvento: String? = null,
+        prioridad: String? = null,
+        tecnicoId: String? = null
+    ): Result<List<Event>> {
+        return try {
+            var query: Query = eventsCollection
+
+            estadoEvento?.let {
+                query = query.whereEqualTo("estadoEvento", it)
+            }
+            tipoEvento?.let {
+                query = query.whereEqualTo("tipoEvento", it)
+            }
+            prioridad?.let {
+                query = query.whereEqualTo("prioridad", it)
+            }
+            tecnicoId?.let {
+                query = query.whereEqualTo("tecnicoId", it)
+            }
+
+            val snapshot = query.get().await()
+
+            Result.success(snapshot.toObjects(Event::class.java))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun getAvailableEvents(): Result<List<Event>> {
         return try {
             val snapshot = eventsCollection

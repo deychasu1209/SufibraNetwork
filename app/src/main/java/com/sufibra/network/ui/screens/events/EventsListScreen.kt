@@ -97,9 +97,22 @@ fun EventsListScreen(navController: NavController) {
     var selectedDate by remember { mutableStateOf(FILTER_ALL) }
 
     LaunchedEffect(Unit) {
-        eventViewModel.loadEvents()
         eventViewModel.loadClients()
         usersViewModel.loadUsers()
+    }
+
+    LaunchedEffect(
+        selectedState,
+        selectedType,
+        selectedPriority,
+        selectedTechnician
+    ) {
+        eventViewModel.loadEvents(
+            stateFilter = selectedState.takeUnless { it == FILTER_ALL },
+            typeFilter = selectedType.takeUnless { it == FILTER_ALL },
+            priorityFilter = selectedPriority.takeUnless { it == FILTER_ALL },
+            technicianIdFilter = selectedTechnician.takeUnless { it == FILTER_ALL }
+        )
     }
 
     val stateOptions = remember {
@@ -158,21 +171,13 @@ fun EventsListScreen(navController: NavController) {
 
     val filteredEvents = remember(
         events,
-        selectedState,
-        selectedType,
-        selectedPriority,
-        selectedTechnician,
         selectedDate
     ) {
         events
             .filter { event ->
-                val matchesState = selectedState == FILTER_ALL || event.estadoEvento == selectedState
-                val matchesType = selectedType == FILTER_ALL || event.tipoEvento == selectedType
-                val matchesPriority = selectedPriority == FILTER_ALL || event.prioridad == selectedPriority
-                val matchesTechnician = selectedTechnician == FILTER_ALL || event.tecnicoId == selectedTechnician
                 val matchesDate = matchesDateFilter(event.fechaCreacion, selectedDate)
 
-                matchesState && matchesType && matchesPriority && matchesTechnician && matchesDate
+                matchesDate
             }
             .sortedByDescending { it.fechaCreacion }
     }
