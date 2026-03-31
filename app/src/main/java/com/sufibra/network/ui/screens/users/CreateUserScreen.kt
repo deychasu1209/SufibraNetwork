@@ -1,5 +1,6 @@
 package com.sufibra.network.ui.screens.users
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -54,9 +56,12 @@ fun CreateUserScreen(
     var apellidos by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var rol by remember { mutableStateOf("TECHNICIAN") }
     var telefono by remember { mutableStateOf("") }
     var zona by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var showConfirmPassword by remember { mutableStateOf(false) }
 
     LaunchedEffect(operationSuccess) {
         if (operationSuccess == true) {
@@ -79,7 +84,7 @@ fun CreateUserScreen(
         ) {
             BackTopBar(
                 title = "Crear usuario",
-                navController = navController,
+                navController = navController
             )
 
             Column(
@@ -125,7 +130,41 @@ fun CreateUserScreen(
                         value = password,
                         onValueChange = { password = it },
                         label = { Text("Contraseña") },
-                        visualTransformation = PasswordVisualTransformation(),
+                        visualTransformation = if (showPassword) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        trailingIcon = {
+                            Text(
+                                text = if (showPassword) "Ocultar" else "Ver",
+                                modifier = Modifier.clickable { showPassword = !showPassword },
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colorScheme.primary
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text("Confirmar contraseña") },
+                        visualTransformation = if (showConfirmPassword) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        trailingIcon = {
+                            Text(
+                                text = if (showConfirmPassword) "Ocultar" else "Ver",
+                                modifier = Modifier.clickable { showConfirmPassword = !showConfirmPassword },
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colorScheme.primary
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -214,6 +253,7 @@ fun CreateUserScreen(
                             apellidos,
                             correo,
                             password,
+                            confirmPassword,
                             rol,
                             telefono.ifBlank { null },
                             zona.ifBlank { null }

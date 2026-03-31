@@ -31,16 +31,32 @@ class UsersViewModel : ViewModel() {
         apellidos: String,
         correo: String,
         password: String,
+        confirmPassword: String,
         rol: String,
         telefono: String? = null,
         zonaAsignada: String? = null
     ) {
-        if (nombres.isBlank() || apellidos.isBlank() || correo.isBlank() || password.isBlank()) {
+        if (
+            nombres.isBlank() ||
+            apellidos.isBlank() ||
+            correo.isBlank() ||
+            password.isBlank() ||
+            confirmPassword.isBlank()
+        ) {
             _errorMessage.value = "Todos los campos obligatorios deben completarse."
             return
         }
 
-        // Validación de teléfono (si se envía)
+        if (password != confirmPassword) {
+            _errorMessage.value = "Las contraseñas no coinciden."
+            return
+        }
+
+        if (password.length < 6) {
+            _errorMessage.value = "La contraseña debe tener al menos 6 caracteres."
+            return
+        }
+
         if (!telefono.isNullOrBlank()) {
             if (telefono.length != 9) {
                 _errorMessage.value = "El teléfono debe tener 9 dígitos."
