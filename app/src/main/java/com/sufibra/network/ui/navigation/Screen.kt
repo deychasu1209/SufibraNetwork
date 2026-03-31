@@ -47,6 +47,9 @@ sealed class Screen(val route: String) {
 
     object TechnicianCurrentJob : Screen("technician_current_job")
     object TechnicianMyJobs : Screen("technician_my_jobs")
+    object TechnicianHistoryEventDetail : Screen("technician_history_event_detail/{eventId}") {
+        fun createRoute(eventId: String) = "technician_history_event_detail/$eventId"
+    }
 
     object FinalizeEvent : Screen("finalize_event/{eventId}") {
         fun createRoute(eventId: String) = "finalize_event/$eventId"

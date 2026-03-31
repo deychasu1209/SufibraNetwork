@@ -197,6 +197,10 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    fun clearSelectedClient() {
+        _selectedClient.value = null
+    }
+
     fun clearError() {
         _errorMessage.value = null
     }

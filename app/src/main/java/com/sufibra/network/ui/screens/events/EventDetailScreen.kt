@@ -1,4 +1,4 @@
-﻿package com.sufibra.network.ui.screens.events
+package com.sufibra.network.ui.screens.events
 
 import android.content.Intent
 import android.net.Uri
@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sufibra.network.R
+import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
 import com.sufibra.network.ui.components.feedback.FeedbackMessageType
@@ -75,24 +77,31 @@ fun EventDetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val client by viewModel.selectedClient.collectAsState()
-    var clientExpanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val technician by viewModel.assignedTechnician.collectAsState()
     val cancelEventSuccess by viewModel.cancelEventSuccess.collectAsState()
     val releaseEventSuccess by viewModel.releaseEventSuccess.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+    val context = LocalContext.current
+
     var showCancelDialog by remember { mutableStateOf(false) }
     var showReleaseDialog by remember { mutableStateOf(false) }
     var actionFeedbackMessage by remember { mutableStateOf<String?>(null) }
+    var clientExpanded by remember { mutableStateOf(false) }
+    var solutionExpanded by remember { mutableStateOf(false) }
+    var observationsExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(eventId) {
         viewModel.loadEventById(eventId)
     }
-    LaunchedEffect(event) {
-        if (event?.tipoEvento == "AVERIA" && event?.clienteId != null) {
-            viewModel.loadClientForEvent(event!!.clienteId!!)
-        }
+
+    LaunchedEffect(event?.idEvento, event?.clienteId) {
+        clientExpanded = false
+        solutionExpanded = false
+        observationsExpanded = false
+        val clientId = event?.clienteId
+        if (!clientId.isNullOrBlank()) viewModel.loadClientForEvent(clientId) else viewModel.clearSelectedClient()
     }
+
     LaunchedEffect(cancelEventSuccess) {
         if (cancelEventSuccess == true) {
             viewModel.clearCancelEventState()
@@ -100,6 +109,7 @@ fun EventDetailScreen(
             actionFeedbackMessage = "El evento fue cancelado correctamente y se conservó su trazabilidad."
         }
     }
+
     LaunchedEffect(releaseEventSuccess) {
         if (releaseEventSuccess == true) {
             viewModel.clearReleaseEventState()
@@ -109,31 +119,19 @@ fun EventDetailScreen(
     }
 
     AdminBaseScreen(navController) { padding ->
-
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+            modifier = Modifier.fillMaxSize().padding(padding)
         ) {
-
-            BackTopBar(
-                title = "Detalle del Evento",
-                navController = navController,
-            )
-
+            BackTopBar(title = "Detalle del evento", navController = navController)
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                if (isLoading) {
-                    CircularProgressIndicator()
-                } else {
-
-                    event?.let { e ->
-
+                when {
+                    isLoading -> CircularProgressIndicator()
+                    event == null -> Text("Evento no encontrado")
+                    else -> {
+                        val e = event!!
                         val estadoColor = when (e.estadoEvento) {
                             "DISPONIBLE" -> AzulPrincipal
                             "TOMADO" -> NaranjaTomado
@@ -142,598 +140,427 @@ fun EventDetailScreen(
                             "CANCELADO" -> colorScheme.outline
                             else -> colorScheme.outline
                         }
-
                         val prioridadColor = when (e.prioridad) {
                             "ALTA" -> RojoAlto
                             "MEDIA" -> AmarilloMedio
                             "BAJA" -> CelesteBajo
                             else -> colorScheme.outline
                         }
+                        val iconTipo = if (e.tipoEvento.uppercase() == "AVERIA") R.drawable.ic_averia else R.drawable.ic_instalacion
+                        val colorTipo = if (e.tipoEvento.uppercase() == "AVERIA") RojoAlto else AzulPrincipal
 
-                        val iconTipo = if (e.tipoEvento.uppercase() == "AVERIA")
-                            R.drawable.ic_averia
-                        else
-                            R.drawable.ic_instalacion
+                        TypeCard(e, iconTipo, colorTipo, estadoColor, prioridadColor)
 
-                        val colorTipo = if (e.tipoEvento.uppercase() == "AVERIA")
-                            RojoAlto
-                        else
-                            AzulPrincipal
-
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-
-                            ) {
-                                Text(
-                                    text = "TIPO DE EVENTO",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .background(
-                                                color = colorScheme.surface,
-                                                shape = RoundedCornerShape(8.dp)
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(iconTipo),
-                                            contentDescription = null,
-                                            tint = colorTipo
-                                        )
-                                    }
-
-                                    Text(
-                                        text = e.tipoEvento.replaceFirstChar { it.uppercase() },
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = colorScheme.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-
-                                    Column(
-                                        horizontalAlignment = Alignment.End,
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-
-                                        StatusBadge(e.estadoEvento, estadoColor)
-                                        StatusBadge(e.prioridad, prioridadColor)
-                                    }
-                                }
-                            }
-                        }
+                        actionFeedbackMessage?.let { FeedbackMessageCard(it, FeedbackMessageType.SUCCESS) }
+                        errorMessage?.let { FeedbackMessageCard(it, FeedbackMessageType.ERROR) }
 
                         val canEditEvent = e.estadoEvento == "DISPONIBLE"
                         val canCancelEvent = e.estadoEvento == "DISPONIBLE" || e.estadoEvento == "TOMADO"
                         val canReleaseEvent = e.estadoEvento == "TOMADO"
 
-                        actionFeedbackMessage?.let { message ->
-                            Spacer(modifier = Modifier.height(16.dp))
-                            FeedbackMessageCard(
-                                message = message,
-                                type = FeedbackMessageType.SUCCESS
-                            )
-                        }
-
-                        errorMessage?.let { message ->
-                            Spacer(modifier = Modifier.height(16.dp))
-                            FeedbackMessageCard(
-                                message = message,
-                                type = FeedbackMessageType.ERROR
-                            )
-                        }
-
                         if (canEditEvent || canCancelEvent || canReleaseEvent) {
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = colorScheme.surfaceVariant
-                                ),
-                                elevation = CardDefaults.cardElevation(
-                                    defaultElevation = 4.dp
-                                )
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text(
-                                        text = "ACCIONES ADMINISTRATIVAS",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.height(8.dp))
-
-                                    Text(
-                                        text = if (canEditEvent) {
-                                            "Este evento aún puede ajustarse o cancelarse antes de que avance el flujo operativo."
-                                        } else if (canReleaseEvent) {
-                                            "Este evento fue tomado, pero todavía puede liberarse para que vuelva a quedar disponible sin perder trazabilidad."
-                                        } else {
-                                            "Este evento ya no puede editarse, pero todavía puede cancelarse porque no inició ejecución."
-                                        },
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        if (canEditEvent) {
-                                            Button(
-                                                onClick = {
-                                                    navController.navigate(Screen.EditEvent.createRoute(e.idEvento))
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                enabled = !isLoading
-                                            ) {
-                                                Text("Editar evento")
-                                            }
-                                        }
-
-                                        if (canCancelEvent) {
-                                            OutlinedButton(
-                                                onClick = { showCancelDialog = true },
-                                                modifier = Modifier.weight(1f),
-                                                enabled = !isLoading
-                                            ) {
-                                                Text("Cancelar evento")
-                                            }
-                                        }
-                                    }
-
-                                    if (canReleaseEvent) {
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        OutlinedButton(
-                                            onClick = { showReleaseDialog = true },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            enabled = !isLoading
-                                        ) {
-                                            Text("Liberar evento")
-                                        }
-                                    }
-                                }
-                            }
+                            AdminActionsCard(
+                                canEditEvent = canEditEvent,
+                                canCancelEvent = canCancelEvent,
+                                canReleaseEvent = canReleaseEvent,
+                                isLoading = isLoading,
+                                onEdit = { navController.navigate(Screen.EditEvent.createRoute(e.idEvento)) },
+                                onCancel = { showCancelDialog = true },
+                                onRelease = { showReleaseDialog = true }
+                            )
                         }
 
                         if (e.tipoEvento == "AVERIA" && client != null) {
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { clientExpanded = !clientExpanded },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = colorScheme.surfaceVariant
-                                ),
-                                elevation = CardDefaults.cardElevation(
-                                    defaultElevation = 4.dp
-                                )
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Column {
-                                            Text(
-                                                text = "Cliente",
-                                                style = MaterialTheme.typography.labelMedium,
-                                                color = colorScheme.onSurfaceVariant
-                                            )
-
-                                            Spacer(modifier = Modifier.height(4.dp))
-
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_persona),
-                                                    contentDescription = null,
-                                                    tint = colorScheme.onSurfaceVariant
-                                                )
-
-                                                Spacer(modifier = Modifier.width(6.dp))
-
-                                                Text(
-                                                    text = client!!.nombresApellidos,
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    color = colorScheme.onSurface
-                                                )
-                                            }
-
-                                            Spacer(modifier = Modifier.height(4.dp))
-
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-
-                                                Icon(
-                                                    painter = painterResource(R.drawable.ic_ubicacion),
-                                                    contentDescription = null,
-                                                    tint = colorScheme.onSurfaceVariant
-                                                )
-
-                                                Spacer(modifier = Modifier.width(6.dp))
-
-                                                Text(
-                                                    text = client!!.direccion,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = colorScheme.onSurfaceVariant
-                                                )
-                                            }
+                            ExpandableClientCard(
+                                title = "Cliente",
+                                name = client!!.nombresApellidos,
+                                address = client!!.direccion,
+                                expanded = clientExpanded,
+                                onToggle = { clientExpanded = !clientExpanded },
+                                extraContent = {
+                                    Text("DNI: ${client!!.dni}", color = colorScheme.onSurface)
+                                    Text("Teléfono: ${client!!.celular}", color = colorScheme.onSurface)
+                                    Text("Zona: ${client!!.zona}", color = colorScheme.onSurface)
+                                    Text("Referencia: ${client!!.referencia}", color = colorScheme.onSurface)
+                                    Text("Caja NAP: ${client!!.cajaNAP}", color = colorScheme.onSurface)
+                                    Text("Puerto NAP: ${client!!.puertoNAP}", color = colorScheme.onSurface)
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    ClientFacadePhotoSection(photoUrl = client!!.fotoFachada, accentColor = estadoColor)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = colorScheme.primaryContainer,
+                                        modifier = Modifier.fillMaxWidth().clickable {
+                                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(client!!.linkMaps)))
                                         }
-
-                                        Text(
-                                            text = if (clientExpanded) "▲" else "▼",
-                                            color = colorScheme.onSurfaceVariant
-                                        )
-                                    }
-
-                                    AnimatedVisibility(visible = clientExpanded) {
-
-                                        Column(
-                                            modifier = Modifier.padding(top = 16.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-
-                                            HorizontalDivider(color = colorScheme.outlineVariant)
-
-                                            Spacer(modifier = Modifier.height(12.dp))
-
-                                            Text("DNI: ${client!!.dni}", color = colorScheme.onSurface)
-                                            Text("Teléfono: ${client!!.celular}", color = colorScheme.onSurface)
-                                            Text("Zona: ${client!!.zona}", color = colorScheme.onSurface)
-                                            Text("Referencia: ${client!!.referencia}", color = colorScheme.onSurface)
-                                            Text("Caja NAP: ${client!!.cajaNAP}", color = colorScheme.onSurface)
-                                            Text("Puerto NAP: ${client!!.puertoNAP}", color = colorScheme.onSurface)
-
-                                            Spacer(modifier = Modifier.height(12.dp))
-
-                                            ClientFacadePhotoSection(
-                                                photoUrl = client!!.fotoFachada,
-                                                accentColor = estadoColor
-                                            )
-
-                                            Spacer(modifier = Modifier.height(16.dp))
-
-                                            Surface(
-                                                shape = RoundedCornerShape(12.dp),
-                                                color = colorScheme.primaryContainer,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        val uri = Uri.parse(client!!.linkMaps)
-                                                        val intent = Intent(Intent.ACTION_VIEW, uri)
-                                                        context.startActivity(intent)
-                                                    }
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                                                    horizontalArrangement = Arrangement.Start
-                                                ) {
-
-                                                    Icon(
-                                                        painter = painterResource(id = R.drawable.ic_ubicacion),
-                                                        contentDescription = "Ubicación",
-                                                        tint = colorScheme.onPrimaryContainer
-                                                    )
-
-                                                    Spacer(modifier = Modifier.width(10.dp))
-
-                                                    Text(
-                                                        text = "Ver ubicación en el mapa",
-                                                        color = colorScheme.onPrimaryContainer,
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
-                                                }
-                                            }
+                                            Icon(painterResource(R.drawable.ic_ubicacion), null, tint = colorScheme.onPrimaryContainer)
+                                            Spacer(modifier = Modifier.width(10.dp))
+                                            Text("Ver ubicación en el mapa", color = colorScheme.onPrimaryContainer)
                                         }
                                     }
                                 }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Column(
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        ) {
-                            Text(
-                                text = "DESCRIPCION DEL EVENTO",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colorScheme.onSurfaceVariant
                             )
                         }
-                        Spacer(modifier = Modifier.height(4.dp))
 
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = e.descripcion,
-                                    color = colorScheme.onSurface
+                        if (e.tipoEvento == "INSTALACION" && client != null) {
+                            SimpleInfoCard(
+                                title = "CLIENTE REGISTRADO",
+                                lines = listOf(
+                                    client!!.nombresApellidos,
+                                    "DNI: ${client!!.dni}",
+                                    client!!.direccion
                                 )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Card(
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
                             )
-                        ) {
+                        }
 
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                        SectionCard("DESCRIPCIÓN DEL EVENTO", e.descripcion)
+                        SimpleInfoCard(
+                            title = "TÉCNICO",
+                            lines = listOf(technician?.let { "${it.nombres} ${it.apellidos}" } ?: "Ningún técnico ha tomado este evento")
+                        )
+                        DatesCard(e)
 
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_tecnico),
-                                        contentDescription = null,
-                                        tint = colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    Text(
-                                        text = "Técnico: ",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-
-                                    Text(
-                                        text = technician?.let {
-                                            "${it.nombres} ${it.apellidos}"
-                                        } ?: "Ningún técnico ha tomado este evento",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = colorScheme.onSurface
-
-                                    )
-                                }
+                        if (!e.solucionAplicada.isNullOrBlank()) {
+                            ExpandableTextCard("SOLUCIÓN APLICADA", e.solucionAplicada, solutionExpanded) {
+                                solutionExpanded = !solutionExpanded
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-
-                                    Icon(
-                                        painter = painterResource(R.drawable.ic_fecha),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp),
-                                        tint = colorScheme.onSurfaceVariant
-                                    )
-
-                                    Spacer(modifier = Modifier.width(8.dp))
-
-                                    Text(
-                                        text = "Fecha de creación: ${formatDate(e.fechaCreacion)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                if (e.fechaCancelacion != null) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_fecha),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                            tint = colorScheme.onSurfaceVariant
-                                        )
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        Text(
-                                            text = "Fecha de cancelación: ${formatDate(e.fechaCancelacion)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-
-                                if (e.fechaLiberacion != null) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_fecha),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp),
-                                            tint = colorScheme.onSurfaceVariant
-                                        )
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        Text(
-                                            text = "Fecha de liberación: ${formatDate(e.fechaLiberacion)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
+                        if (!e.observaciones.isNullOrBlank()) {
+                            ExpandableTextCard("OBSERVACIONES", e.observaciones, observationsExpanded) {
+                                observationsExpanded = !observationsExpanded
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(
-                                defaultElevation = 4.dp
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "ID del evento: #${e.idEvento.takeLast(4)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                    } ?: Text("Evento no encontrado")
+                        SimpleInfoCard(title = "IDENTIFICADOR", lines = listOf("ID del evento: #${e.idEvento.takeLast(4)}"))
+                    }
                 }
             }
         }
     }
 
     if (showCancelDialog && event != null) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!isLoading) {
-                    showCancelDialog = false
-                }
-            },
-            title = {
-                Text("Cancelar evento")
-            },
-            text = {
-                Text("¿Deseas cancelar este evento? El registro se conservará para trazabilidad y pasará a estado CANCELADO.")
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.cancelEvent(event!!.idEvento)
-                    },
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Confirmar")
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showCancelDialog = false }
-                    ,
-                    enabled = !isLoading
-                ) {
-                    Text("Volver")
-                }
-            }
+        ConfirmEventDialog(
+            title = "Cancelar evento",
+            message = "¿Deseas cancelar este evento? El registro se conservará para trazabilidad y pasará a estado CANCELADO.",
+            isLoading = isLoading,
+            onConfirm = { viewModel.cancelEvent(event!!.idEvento) },
+            onDismiss = { showCancelDialog = false }
         )
     }
 
     if (showReleaseDialog && event != null) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!isLoading) {
-                    showReleaseDialog = false
-                }
-            },
-            title = {
-                Text("Liberar evento")
-            },
-            text = {
-                Text("¿Deseas liberar este evento? Volverá a estado DISPONIBLE para que otro técnico pueda tomarlo.")
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.releaseEvent(event!!.idEvento)
-                    },
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Confirmar")
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showReleaseDialog = false }
-                    ,
-                    enabled = !isLoading
-                ) {
-                    Text("Volver")
-                }
-            }
+        ConfirmEventDialog(
+            title = "Liberar evento",
+            message = "¿Deseas liberar este evento? Volverá a estado DISPONIBLE para que otro técnico pueda tomarlo.",
+            isLoading = isLoading,
+            onConfirm = { viewModel.releaseEvent(event!!.idEvento) },
+            onDismiss = { showReleaseDialog = false }
         )
     }
+}
+
+@Composable
+private fun TypeCard(
+    event: Event,
+    iconTipo: Int,
+    colorTipo: Color,
+    estadoColor: Color,
+    prioridadColor: Color
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("TIPO DE EVENTO", style = MaterialTheme.typography.labelSmall, color = colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.size(36.dp).background(colorScheme.surface, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(painter = painterResource(iconTipo), contentDescription = null, tint = colorTipo)
+                }
+                Text(
+                    text = event.tipoEvento.replaceFirstChar { it.uppercase() },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    StatusBadge(event.estadoEvento, estadoColor)
+                    StatusBadge(event.prioridad, prioridadColor)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AdminActionsCard(
+    canEditEvent: Boolean,
+    canCancelEvent: Boolean,
+    canReleaseEvent: Boolean,
+    isLoading: Boolean,
+    onEdit: () -> Unit,
+    onCancel: () -> Unit,
+    onRelease: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("ACCIONES ADMINISTRATIVAS", style = MaterialTheme.typography.labelMedium, color = colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = if (canEditEvent) {
+                    "Este evento aún puede ajustarse o cancelarse antes de que avance el flujo operativo."
+                } else if (canReleaseEvent) {
+                    "Este evento fue tomado, pero todavía puede liberarse para que vuelva a quedar disponible sin perder trazabilidad."
+                } else {
+                    "Este evento ya no puede editarse, pero todavía puede cancelarse porque no inició ejecución."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (canEditEvent) {
+                    Button(onClick = onEdit, modifier = Modifier.weight(1f), enabled = !isLoading) {
+                        Text("Editar evento")
+                    }
+                }
+                if (canCancelEvent) {
+                    OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f), enabled = !isLoading) {
+                        Text("Cancelar evento")
+                    }
+                }
+            }
+            if (canReleaseEvent) {
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedButton(onClick = onRelease, modifier = Modifier.fillMaxWidth(), enabled = !isLoading) {
+                    Text("Liberar evento")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpandableClientCard(
+    title: String,
+    name: String,
+    address: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    extraContent: @Composable ColumnScope.() -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onToggle() },
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text(title, style = MaterialTheme.typography.labelMedium, color = colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(R.drawable.ic_persona), null, tint = colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(name, style = MaterialTheme.typography.titleMedium, color = colorScheme.onSurface)
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(R.drawable.ic_ubicacion), null, tint = colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(address, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                    }
+                }
+                Text(if (expanded) "▲" else "▼", color = colorScheme.onSurfaceVariant)
+            }
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    HorizontalDivider(color = colorScheme.outlineVariant)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    extraContent()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SectionCard(title: String, body: String) {
+    val colorScheme = MaterialTheme.colorScheme
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 10.dp)) {
+            Text(title, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+        }
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(body, color = colorScheme.onSurface)
+            }
+        }
+    }
+}
+
+@Composable
+fun SimpleInfoCard(title: String, lines: List<String>) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.labelMedium, color = colorScheme.onSurfaceVariant)
+            lines.forEachIndexed { index, line ->
+                Text(
+                    text = line,
+                    style = if (index == 0) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodySmall,
+                    color = if (index == 0) colorScheme.onSurface else colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DatesCard(event: Event) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            DateRow("Fecha de creación", event.fechaCreacion)
+            event.fechaToma?.let { DateRow("Fecha de toma", it) }
+            event.fechaInicio?.let { DateRow("Fecha de inicio", it) }
+            event.fechaFinalizacion?.let { DateRow("Fecha de finalización", it) }
+            event.fechaCancelacion?.let { DateRow("Fecha de cancelación", it) }
+            event.fechaLiberacion?.let { DateRow("Fecha de liberación", it) }
+        }
+    }
+}
+
+@Composable
+private fun DateRow(label: String, timestamp: Long) {
+    val colorScheme = MaterialTheme.colorScheme
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(R.drawable.ic_fecha),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "$label: ${formatDate(timestamp)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun ExpandableTextCard(
+    title: String,
+    text: String,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onToggle() },
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(title, style = MaterialTheme.typography.labelMedium, color = colorScheme.onSurfaceVariant)
+                Text(if (expanded) "▲" else "▼", color = colorScheme.onSurfaceVariant)
+            }
+            Text(
+                text = if (expanded || text.length <= 140) text else "${text.take(140).trimEnd()}...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConfirmEventDialog(
+    title: String,
+    message: String,
+    isLoading: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!isLoading) onDismiss() },
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = !isLoading) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("Confirmar")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isLoading) {
+                Text("Volver")
+            }
+        }
+    )
 }
 
 fun formatDate(timestamp: Long): String {
@@ -744,16 +571,8 @@ fun formatDate(timestamp: Long): String {
 @Composable
 fun StatusBadge(text: String, backgroundColor: Color) {
     val colorScheme = MaterialTheme.colorScheme
-    val contentColor = if (backgroundColor.luminance() > 0.75f) {
-        colorScheme.onSurface
-    } else {
-        Color.White
-    }
-
-    Surface(
-        color = backgroundColor,
-        shape = RoundedCornerShape(50)
-    ) {
+    val contentColor = if (backgroundColor.luminance() > 0.75f) colorScheme.onSurface else Color.White
+    Surface(color = backgroundColor, shape = RoundedCornerShape(50)) {
         Text(
             text = text,
             color = contentColor,
@@ -762,6 +581,3 @@ fun StatusBadge(text: String, backgroundColor: Color) {
         )
     }
 }
-
-
-

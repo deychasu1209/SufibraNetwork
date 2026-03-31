@@ -21,6 +21,7 @@ import com.sufibra.network.ui.screens.events.FinalizeEventScreen
 import com.sufibra.network.ui.screens.events.TechnicianAvailableEventsScreen
 import com.sufibra.network.ui.screens.events.TechnicianCurrentJobScreen
 import com.sufibra.network.ui.screens.events.TechnicianEventDetailScreen
+import com.sufibra.network.ui.screens.events.TechnicianHistoryEventDetailScreen
 import com.sufibra.network.ui.screens.events.TechnicianMyJobsScreen
 import com.sufibra.network.ui.screens.login.LoginScreen
 import com.sufibra.network.ui.screens.profile.ChangePasswordScreen
@@ -178,6 +179,21 @@ fun AppNavigation() {
 
         composable(Screen.TechnicianMyJobs.route) {
             TechnicianMyJobsScreen(navController)
+        }
+
+        composable(
+            route = Screen.TechnicianHistoryEventDetail.route,
+            arguments = listOf(
+                navArgument("eventId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+
+            TechnicianHistoryEventDetailScreen(
+                navController = navController,
+                eventId = eventId
+            )
         }
 
         composable(

@@ -1,6 +1,7 @@
 ﻿package com.sufibra.network.ui.screens.events
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -130,7 +131,12 @@ fun TechnicianMyJobsScreen(
                         HistoryJobCard(
                             event = event,
                             clientName = client?.nombresApellidos,
-                            clientAddress = client?.direccion
+                            clientAddress = client?.direccion,
+                            onClick = {
+                                navController.navigate(
+                                    Screen.TechnicianHistoryEventDetail.createRoute(event.idEvento)
+                                )
+                            }
                         )
                     }
                 }
@@ -184,7 +190,8 @@ private fun JobsSectionHeader(
 private fun HistoryJobCard(
     event: Event,
     clientName: String?,
-    clientAddress: String?
+    clientAddress: String?,
+    onClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val title = if (event.tipoEvento.uppercase() == "AVERIA") {
@@ -200,7 +207,9 @@ private fun HistoryJobCard(
     val dateValue = formatDate(event.fechaFinalizacion ?: event.fechaCreacion)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surfaceVariant
