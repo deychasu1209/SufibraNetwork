@@ -45,7 +45,6 @@ class ClientRepository {
             } else {
                 Result.failure(Exception("Cliente no encontrado"))
             }
-
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -53,12 +52,14 @@ class ClientRepository {
 
     suspend fun createClient(client: Client): Result<Unit> {
         return try {
-            if (isDuplicateDni(client.dni)) {
+            val normalizedClient = normalizeClient(client)
+
+            if (isDuplicateDni(normalizedClient.dni)) {
                 return Result.failure(Exception("Ya existe un cliente registrado con ese DNI."))
             }
 
             val document = clientsCollection.document()
-            val clientToSave = client.copy(
+            val clientToSave = normalizedClient.copy(
                 idCliente = document.id,
                 estadoCliente = true,
                 fechaRegistro = System.currentTimeMillis()
@@ -72,13 +73,15 @@ class ClientRepository {
 
     suspend fun updateClient(client: Client): Result<Unit> {
         return try {
-            if (isDuplicateDni(client.dni, client.idCliente)) {
+            val normalizedClient = normalizeClient(client)
+
+            if (isDuplicateDni(normalizedClient.dni, normalizedClient.idCliente)) {
                 return Result.failure(Exception("Ya existe un cliente registrado con ese DNI."))
             }
 
             clientsCollection
-                .document(client.idCliente)
-                .set(client)
+                .document(normalizedClient.idCliente)
+                .set(normalizedClient)
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
@@ -96,5 +99,24 @@ class ClientRepository {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun normalizeClient(client: Client): Client {
+        return client.copy(
+            nombresApellidos = normalizeSpaces(client.nombresApellidos),
+            dni = client.dni.trim(),
+            celular = client.celular.trim(),
+            direccion = normalizeSpaces(client.direccion),
+            referencia = normalizeSpaces(client.referencia),
+            zona = normalizeSpaces(client.zona),
+            cajaNAP = normalizeSpaces(client.cajaNAP),
+            puertoNAP = normalizeSpaces(client.puertoNAP),
+            linkMaps = client.linkMaps.trim(),
+            fotoFachada = client.fotoFachada.trim()
+        )
+    }
+
+    private fun normalizeSpaces(value: String): String {
+        return value.trim().replace("\\s+".toRegex(), " ")
     }
 }

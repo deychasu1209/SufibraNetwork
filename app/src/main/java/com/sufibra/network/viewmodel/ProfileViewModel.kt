@@ -52,15 +52,17 @@ class ProfileViewModel : ViewModel() {
         apellidos: String,
         telefono: String
     ) {
+        val normalizedNames = normalizeSpaces(nombres)
+        val normalizedLastNames = normalizeSpaces(apellidos)
         val normalizedPhone = telefono.trim()
 
-        if (nombres.isBlank()) {
+        if (normalizedNames.isBlank()) {
             _errorMessage.value = "Los nombres son obligatorios"
             _profileUpdated.value = false
             return
         }
 
-        if (apellidos.isBlank()) {
+        if (normalizedLastNames.isBlank()) {
             _errorMessage.value = "Los apellidos son obligatorios"
             _profileUpdated.value = false
             return
@@ -92,8 +94,8 @@ class ProfileViewModel : ViewModel() {
             }
 
             val result = userRepository.updateOwnProfile(
-                nombres = nombres.trim(),
-                apellidos = apellidos.trim(),
+                nombres = normalizedNames,
+                apellidos = normalizedLastNames,
                 telefono = telefonoToSave
             )
 
@@ -176,5 +178,9 @@ class ProfileViewModel : ViewModel() {
 
     fun resetPasswordChangedState() {
         _passwordChanged.value = null
+    }
+
+    private fun normalizeSpaces(value: String): String {
+        return value.trim().replace("\\s+".toRegex(), " ")
     }
 }

@@ -1,11 +1,11 @@
 package com.sufibra.network.data.repository
 
+import android.content.Context
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sufibra.network.domain.model.User
 import kotlinx.coroutines.tasks.await
-import com.google.firebase.auth.FirebaseAuth
-import android.content.Context
-import com.google.firebase.FirebaseApp
 
 class UserRepository {
 
@@ -21,7 +21,6 @@ class UserRepository {
 
     suspend fun getUserByUid(uid: String): Result<User> {
         return try {
-
             val document = firestore
                 .collection("usuarios")
                 .document(uid)
@@ -29,7 +28,6 @@ class UserRepository {
                 .await()
 
             if (document.exists()) {
-
                 val user = User(
                     idUsuario = document.getString("idUsuario") ?: "",
                     nombres = document.getString("nombres") ?: "",
@@ -44,16 +42,13 @@ class UserRepository {
                 )
 
                 Result.success(user)
-
             } else {
                 Result.failure(Exception("Usuario no encontrado en Firestore"))
             }
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
     suspend fun createUser(
         context: Context,
@@ -65,15 +60,16 @@ class UserRepository {
         telefono: String? = null,
         zonaAsignada: String? = null
     ): Result<User> {
-
-
         return try {
+            val normalizedNames = normalizeSpaces(nombres)
+            val normalizedLastNames = normalizeSpaces(apellidos)
+            val normalizedEmail = correo.trim()
+            val normalizedPhone = telefono?.trim()?.takeIf { it.isNotBlank() }
+            val normalizedZone = zonaAsignada?.let(::normalizeSpaces)?.takeIf { it.isNotBlank() }
 
-            // Obtener configuración del proyecto actual
             val primaryApp = FirebaseApp.getInstance()
             val options = primaryApp.options
 
-            // Crear instancia secundaria
             val secondaryApp = FirebaseApp.initializeApp(
                 context,
                 options,
@@ -82,9 +78,8 @@ class UserRepository {
 
             val secondaryAuth = FirebaseAuth.getInstance(secondaryApp)
 
-            // Crear usuario usando instancia secundaria
             val authResult = secondaryAuth
-                .createUserWithEmailAndPassword(correo, password)
+                .createUserWithEmailAndPassword(normalizedEmail, password)
                 .await()
 
             val uid = authResult.user?.uid
@@ -92,14 +87,14 @@ class UserRepository {
 
             val user = User(
                 idUsuario = uid,
-                nombres = nombres,
-                apellidos = apellidos,
-                correo = correo,
+                nombres = normalizedNames,
+                apellidos = normalizedLastNames,
+                correo = normalizedEmail,
                 rol = rol,
                 estado = true,
                 fechaCreacion = System.currentTimeMillis(),
-                telefono = telefono,
-                zonaAsignada = zonaAsignada,
+                telefono = normalizedPhone,
+                zonaAsignada = normalizedZone,
                 disponible = if (rol == "TECHNICIAN") true else null
             )
 
@@ -108,21 +103,17 @@ class UserRepository {
                 .set(user)
                 .await()
 
-            // Cerrar sesión secundaria
             secondaryAuth.signOut()
             secondaryApp.delete()
 
             Result.success(user)
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-
     suspend fun getAllUsers(): Result<List<User>> {
         return try {
-
             val snapshot = firestore
                 .collection("usuarios")
                 .get()
@@ -133,43 +124,42 @@ class UserRepository {
             }
 
             Result.success(users)
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
     suspend fun updateUser(user: User): Result<Unit> {
         return try {
+            val normalizedUser = user.copy(
+                nombres = normalizeSpaces(user.nombres),
+                apellidos = normalizeSpaces(user.apellidos),
+                telefono = user.telefono?.trim()?.takeIf { it.isNotBlank() },
+                zonaAsignada = user.zonaAsignada?.let(::normalizeSpaces)?.takeIf { it.isNotBlank() }
+            )
 
             firestore.collection("usuarios")
                 .document(user.idUsuario)
-                .set(user)
+                .set(normalizedUser)
                 .await()
 
             Result.success(Unit)
-
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-
 
     suspend fun updateUserStatus(
         uid: String,
         estado: Boolean
     ): Result<Unit> {
-
         return try {
-
             firestore.collection("usuarios")
                 .document(uid)
                 .update("estado", estado)
                 .await()
 
             Result.success(Unit)
-
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -188,9 +178,9 @@ class UserRepository {
                 .document(uid)
                 .update(
                     mapOf(
-                        "nombres" to nombres,
-                        "apellidos" to apellidos,
-                        "telefono" to telefono
+                        "nombres" to normalizeSpaces(nombres),
+                        "apellidos" to normalizeSpaces(apellidos),
+                        "telefono" to telefono?.trim()?.takeIf { it.isNotBlank() }
                     )
                 )
                 .await()
@@ -201,6 +191,7 @@ class UserRepository {
         }
     }
 
-
-
+    private fun normalizeSpaces(value: String): String {
+        return value.trim().replace("\\s+".toRegex(), " ")
+    }
 }

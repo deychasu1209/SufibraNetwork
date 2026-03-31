@@ -303,7 +303,7 @@ class EventRepository {
         return try {
             val now = System.currentTimeMillis()
             val clientDoc = firestore.collection("clients").document()
-            val clientToSave = client.copy(
+            val clientToSave = normalizeClientForSave(client).copy(
                 idCliente = clientDoc.id,
                 estadoCliente = true,
                 fechaRegistro = now
@@ -468,6 +468,25 @@ class EventRepository {
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    private fun normalizeClientForSave(client: Client): Client {
+        return client.copy(
+            nombresApellidos = normalizeSpaces(client.nombresApellidos),
+            dni = client.dni.trim(),
+            celular = client.celular.trim(),
+            direccion = normalizeSpaces(client.direccion),
+            referencia = normalizeSpaces(client.referencia),
+            zona = normalizeSpaces(client.zona),
+            cajaNAP = normalizeSpaces(client.cajaNAP),
+            puertoNAP = normalizeSpaces(client.puertoNAP),
+            linkMaps = client.linkMaps.trim(),
+            fotoFachada = client.fotoFachada.trim()
+        )
+    }
+
+    private fun normalizeSpaces(value: String): String {
+        return value.trim().replace("\\s+".toRegex(), " ")
     }
 
 }
