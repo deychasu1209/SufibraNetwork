@@ -45,7 +45,7 @@ fun TechnicianMyJobsScreen(
 ) {
     val viewModel: EventViewModel = viewModel()
     val currentEvent by viewModel.currentTechnicianEvent.collectAsState()
-    val events by viewModel.events.collectAsState()
+    val historyEvents by viewModel.technicianHistoryEvents.collectAsState()
     val clients by viewModel.clients.collectAsState()
     val technicianId = FirebaseAuth.getInstance().currentUser?.uid
     val colorScheme = MaterialTheme.colorScheme
@@ -54,19 +54,9 @@ fun TechnicianMyJobsScreen(
     LaunchedEffect(technicianId) {
         technicianId?.let {
             viewModel.loadCurrentTechnicianEvent(it)
-            viewModel.loadEvents()
+            viewModel.loadTechnicianHistoryEvents(it)
             viewModel.loadClients()
         }
-    }
-
-    val historyEvents = remember(events, technicianId) {
-        events
-            .filter { event ->
-                event.tecnicoId == technicianId && event.estadoEvento == "FINALIZADO"
-            }
-            .sortedByDescending { event ->
-                event.fechaFinalizacion ?: event.fechaCreacion
-            }
     }
 
     val activeClient = currentEvent?.clienteId?.let { clientsMap[it] }

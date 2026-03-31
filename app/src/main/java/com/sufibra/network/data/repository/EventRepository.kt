@@ -66,6 +66,23 @@ class EventRepository {
         }
     }
 
+    suspend fun getFinishedEventsForTechnician(technicianId: String): Result<List<Event>> {
+        return try {
+            val snapshot = eventsCollection
+                .whereEqualTo("tecnicoId", technicianId)
+                .whereEqualTo("estadoEvento", "FINALIZADO")
+                .get()
+                .await()
+
+            val events = snapshot.toObjects(Event::class.java)
+                .sortedByDescending { it.fechaFinalizacion ?: it.fechaCreacion }
+
+            Result.success(events)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun takeEvent(eventId: String, technicianId: String): Result<Unit> {
         return try {
             firestore.runTransaction { transaction ->

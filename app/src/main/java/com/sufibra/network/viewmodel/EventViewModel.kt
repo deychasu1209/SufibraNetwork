@@ -34,6 +34,9 @@ class EventViewModel : ViewModel() {
     private val _currentTechnicianEvent = MutableStateFlow<Event?>(null)
     val currentTechnicianEvent: StateFlow<Event?> = _currentTechnicianEvent
 
+    private val _technicianHistoryEvents = MutableStateFlow<List<Event>>(emptyList())
+    val technicianHistoryEvents: StateFlow<List<Event>> = _technicianHistoryEvents
+
     private val _selectedEvent = MutableStateFlow<Event?>(null)
     val selectedEvent: StateFlow<Event?> = _selectedEvent
 
@@ -193,6 +196,20 @@ class EventViewModel : ViewModel() {
         }
     }
 
+    fun loadTechnicianHistoryEvents(technicianId: String) {
+        viewModelScope.launch {
+            val result = repository.getFinishedEventsForTechnician(technicianId)
+
+            result.onSuccess {
+                _technicianHistoryEvents.value = it
+            }
+
+            result.onFailure {
+                _errorMessage.value = it.message
+            }
+        }
+    }
+
     fun startEvent(eventId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -266,6 +283,7 @@ class EventViewModel : ViewModel() {
             result.onSuccess {
                 _finalizeEventSuccess.value = true
                 loadCurrentTechnicianEvent(technicianId)
+                loadTechnicianHistoryEvents(technicianId)
                 loadEventById(eventId)
                 loadAvailableEvents()
                 loadEvents()
@@ -324,6 +342,7 @@ class EventViewModel : ViewModel() {
             result.onSuccess {
                 _finalizeEventSuccess.value = true
                 loadCurrentTechnicianEvent(technicianId)
+                loadTechnicianHistoryEvents(technicianId)
                 loadEventById(eventId)
                 loadAvailableEvents()
                 loadEvents()
