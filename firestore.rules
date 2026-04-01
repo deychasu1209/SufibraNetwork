@@ -11,23 +11,78 @@ service cloud.firestore {
       return /databases/$(database)/documents/usuarios/$(request.auth.uid);
     }
 
+    function currentUserExists() {
+      return isAuthenticated() && exists(currentUserPath());
+    }
+
     function currentUserData() {
       return get(currentUserPath()).data;
     }
 
     function isAdmin() {
-      return isAuthenticated() && currentUserData().rol == "ADMIN";
+      return currentUserExists() && currentUserData().rol == "ADMIN";
     }
 
     function isTechnician() {
-      return isAuthenticated() && currentUserData().rol == "TECHNICIAN";
+      return currentUserExists() && currentUserData().rol == "TECHNICIAN";
     }
 
     function isSelf(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function keepsProtectedUserFields() {
+    function isNonEmptyString(value) {
+      return value is string && value.size() > 0;
+    }
+
+    function isNullableString(value) {
+      return value == null || value is string;
+    }
+
+    function isNullableBoolean(value) {
+      return value == null || value is bool;
+    }
+
+    function isNullableInt(value) {
+      return value == null || value is int;
+    }
+
+    function isValidRole(role) {
+      return role == "ADMIN" || role == "TECHNICIAN";
+    }
+
+    function isValidEventType(tipoEvento) {
+      return tipoEvento == "AVERIA" || tipoEvento == "INSTALACION";
+    }
+
+    function isValidEventState(estadoEvento) {
+      return estadoEvento == "DISPONIBLE"
+        || estadoEvento == "TOMADO"
+        || estadoEvento == "EN PROCESO"
+        || estadoEvento == "FINALIZADO"
+        || estadoEvento == "CANCELADO";
+    }
+
+    function isValidPriority(prioridad) {
+      return prioridad == "ALTA"
+        || prioridad == "MEDIA"
+        || prioridad == "BAJA";
+    }
+
+    function hasValidUserShape(userId) {
+      return request.resource.data.idUsuario == userId
+        && isNonEmptyString(request.resource.data.nombres)
+        && isNonEmptyString(request.resource.data.apellidos)
+        && isNonEmptyString(request.resource.data.correo)
+        && isValidRole(request.resource.data.rol)
+        && request.resource.data.estado is bool
+        && request.resource.data.fechaCreacion is int
+        && isNullableString(request.resource.data.telefono)
+        && isNullableString(request.resource.data.zonaAsignada)
+        && isNullableBoolean(request.resource.data.disponible);
+    }
+
+    function keepsImmutableUserFields() {
       return request.resource.data.idUsuario == resource.data.idUsuario
         && request.resource.data.correo == resource.data.correo
         && request.resource.data.rol == resource.data.rol
@@ -36,22 +91,173 @@ service cloud.firestore {
         && request.resource.data.zonaAsignada == resource.data.zonaAsignada;
     }
 
+    function isOwnProfileUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys()
+        .hasOnly(["nombres", "apellidos", "telefono"]);
+    }
+
+    function isOwnAvailabilityUpdate() {
+      return isTechnician()
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(["disponible"]);
+    }
+
+    function hasValidClientShape(clientId) {
+      return request.resource.data.idCliente == clientId
+        && isNonEmptyString(request.resource.data.nombresApellidos)
+        && request.resource.data.dni is string
+        && request.resource.data.dni.size() == 8
+        && request.resource.data.celular is string
+        && request.resource.data.celular.size() == 9
+        && isNonEmptyString(request.resource.data.zona)
+        && isNonEmptyString(request.resource.data.direccion)
+        && request.resource.data.referencia is string
+        && request.resource.data.linkMaps is string
+        && request.resource.data.fotoFachada is string
+        && request.resource.data.cajaNAP is string
+        && request.resource.data.puertoNAP is string
+        && request.resource.data.estadoCliente is bool
+        && request.resource.data.fechaRegistro is int;
+    }
+
+    function keepsImmutableClientFields() {
+      return request.resource.data.idCliente == resource.data.idCliente
+        && request.resource.data.fechaRegistro == resource.data.fechaRegistro;
+    }
+
+    function hasValidEventShape(eventId) {
+      return request.resource.data.idEvento == eventId
+        && isValidEventType(request.resource.data.tipoEvento)
+        && isNonEmptyString(request.resource.data.descripcion)
+        && isValidEventState(request.resource.data.estadoEvento)
+        && isValidPriority(request.resource.data.prioridad)
+        && request.resource.data.fechaCreacion is int
+        && isNullableInt(request.resource.data.fechaToma)
+        && isNullableInt(request.resource.data.fechaInicio)
+        && isNullableInt(request.resource.data.fechaFinalizacion)
+        && isNullableInt(request.resource.data.fechaCancelacion)
+        && isNullableInt(request.resource.data.fechaLiberacion)
+        && isNullableString(request.resource.data.solucionAplicada)
+        && isNullableString(request.resource.data.observaciones)
+        && isNullableString(request.resource.data.clienteId)
+        && isNullableString(request.resource.data.tecnicoId)
+        && isNullableString(request.resource.data.administradorId)
+        && isNullableString(request.resource.data.canceladoPor)
+        && isNullableString(request.resource.data.liberadoPor);
+    }
+
+    function isValidAdminEventCreate(eventId) {
+      return hasValidEventShape(eventId)
+        && request.resource.data.estadoEvento == "DISPONIBLE"
+        && request.resource.data.fechaToma == null
+        && request.resource.data.fechaInicio == null
+        && request.resource.data.fechaFinalizacion == null
+        && request.resource.data.fechaCancelacion == null
+        && request.resource.data.fechaLiberacion == null
+        && request.resource.data.solucionAplicada == null
+        && request.resource.data.observaciones == null
+        && request.resource.data.tecnicoId == null
+        && request.resource.data.canceladoPor == null
+        && request.resource.data.liberadoPor == null;
+    }
+
+    function isTakingOwnEvent() {
+      return hasValidEventShape(resource.data.idEvento)
+        && resource.data.estadoEvento == "DISPONIBLE"
+        && resource.data.tecnicoId == null
+        && request.resource.data.estadoEvento == "TOMADO"
+        && request.resource.data.tecnicoId == request.auth.uid
+        && request.resource.data.fechaToma is int
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(["estadoEvento", "tecnicoId", "fechaToma"]);
+    }
+
+    function isStartingOwnEvent() {
+      return hasValidEventShape(resource.data.idEvento)
+        && resource.data.estadoEvento == "TOMADO"
+        && resource.data.tecnicoId == request.auth.uid
+        && request.resource.data.estadoEvento == "EN PROCESO"
+        && request.resource.data.tecnicoId == resource.data.tecnicoId
+        && request.resource.data.fechaInicio is int
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(["estadoEvento", "fechaInicio"]);
+    }
+
+    function isFinalizingAveria() {
+      return hasValidEventShape(resource.data.idEvento)
+        && resource.data.tipoEvento == "AVERIA"
+        && resource.data.estadoEvento == "EN PROCESO"
+        && resource.data.tecnicoId == request.auth.uid
+        && request.resource.data.estadoEvento == "FINALIZADO"
+        && request.resource.data.tecnicoId == resource.data.tecnicoId
+        && request.resource.data.clienteId == resource.data.clienteId
+        && request.resource.data.fechaFinalizacion is int
+        && isNonEmptyString(request.resource.data.solucionAplicada)
+        && isNullableString(request.resource.data.observaciones)
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(["estadoEvento", "fechaFinalizacion", "solucionAplicada", "observaciones"]);
+    }
+
+    function isFinalizingInstallation() {
+      return hasValidEventShape(resource.data.idEvento)
+        && resource.data.tipoEvento == "INSTALACION"
+        && resource.data.estadoEvento == "EN PROCESO"
+        && resource.data.tecnicoId == request.auth.uid
+        && request.resource.data.estadoEvento == "FINALIZADO"
+        && request.resource.data.tecnicoId == resource.data.tecnicoId
+        && isNonEmptyString(request.resource.data.clienteId)
+        && request.resource.data.fechaFinalizacion is int
+        && isNonEmptyString(request.resource.data.solucionAplicada)
+        && isNullableString(request.resource.data.observaciones)
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly(["estadoEvento", "fechaFinalizacion", "solucionAplicada", "observaciones", "clienteId"]);
+    }
+
     match /usuarios/{userId} {
       allow read: if isSelf(userId) || isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (isSelf(userId) && keepsProtectedUserFields());
+
+      allow create: if isAdmin()
+        && hasValidUserShape(userId);
+
+      allow update: if (isAdmin() && hasValidUserShape(resource.data.idUsuario))
+        || (
+          isSelf(userId)
+          && hasValidUserShape(resource.data.idUsuario)
+          && keepsImmutableUserFields()
+          && (isOwnProfileUpdate() || isOwnAvailabilityUpdate())
+        );
+
       allow delete: if false;
     }
 
     match /clients/{clientId} {
       allow read: if isAdmin() || isTechnician();
-      allow create, update: if isAdmin() || isTechnician();
+
+      allow create: if (isAdmin() || isTechnician())
+        && hasValidClientShape(clientId);
+
+      allow update: if isAdmin()
+        && hasValidClientShape(resource.data.idCliente)
+        && keepsImmutableClientFields();
+
       allow delete: if false;
     }
 
     match /events/{eventId} {
       allow read: if isAdmin() || isTechnician();
-      allow create, update: if isAdmin() || isTechnician();
+
+      allow create: if isAdmin()
+        && isValidAdminEventCreate(eventId);
+
+      allow update: if (isAdmin()
+          && hasValidEventShape(resource.data.idEvento)
+          && request.resource.data.idEvento == resource.data.idEvento)
+        || (isTechnician()
+          && (isTakingOwnEvent()
+            || isStartingOwnEvent()
+            || isFinalizingAveria()
+            || isFinalizingInstallation()));
+
       allow delete: if false;
     }
 
