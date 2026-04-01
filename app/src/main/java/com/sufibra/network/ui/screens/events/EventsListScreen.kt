@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -85,6 +86,9 @@ fun EventsListScreen(navController: NavController) {
     val users by usersViewModel.users.collectAsState()
     val clients by eventViewModel.clients.collectAsState()
     val clientsMap = clients.associateBy { it.idCliente }
+    val techniciansMap = remember(users) {
+        users.associateBy { it.idUsuario }
+    }
     val colorScheme = MaterialTheme.colorScheme
 
     var showCreateMenu by remember { mutableStateOf(false) }
@@ -437,6 +441,10 @@ fun EventsListScreen(navController: NavController) {
                 ) {
                     items(filteredEvents) { event ->
                         val client = event.clienteId?.let { clientsMap[it] }
+                        val technician = event.tecnicoId?.let { techniciansMap[it] }
+                        val assignedTechnicianName = technician?.let {
+                            formatShortTechnicianName(it.nombres, it.apellidos)
+                        }
 
                         EventCard(
                             tipo = event.tipoEvento,
@@ -447,6 +455,7 @@ fun EventsListScreen(navController: NavController) {
                             idEvento = event.idEvento,
                             nombreCliente = client?.nombresApellidos,
                             direccionCliente = client?.direccion,
+                            nombreTecnico = assignedTechnicianName,
                             onClick = {
                                 navController.navigate(
                                     Screen.EventDetail.createRoute(event.idEvento)
@@ -530,6 +539,7 @@ fun EventCard(
     idEvento: String,
     nombreCliente: String?,
     direccionCliente: String?,
+    nombreTecnico: String? = null,
     leftStripeColor: Color? = null,
     onClick: () -> Unit
 ) {
@@ -562,6 +572,16 @@ fun EventCard(
         RojoAlto
     } else {
         AzulPrincipal
+    }
+
+    val footerRightText = if (
+        estado != "DISPONIBLE" &&
+        estado != "CANCELADO" &&
+        !nombreTecnico.isNullOrBlank()
+    ) {
+        "Técnico: $nombreTecnico"
+    } else {
+        "ID: #${idEvento.takeLast(4)}"
     }
 
     Spacer(modifier = Modifier.height(4.dp))
@@ -696,11 +716,41 @@ fun EventCard(
                             )
                         }
 
-                        Text(
-                            text = "ID: #${idEvento.takeLast(4)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colorScheme.onSurfaceVariant
-                        )
+                        if (
+                            estado != "DISPONIBLE" &&
+                            estado != "CANCELADO" &&
+                            !nombreTecnico.isNullOrBlank()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(start = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_tecnico),
+                                    contentDescription = null,
+                                    tint = colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+
+                                Text(
+                                    text = nombreTecnico,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = footerRightText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(start = 12.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -715,6 +765,15 @@ fun extractDireccion(descripcion: String): String {
     val match = regex.find(descripcion)
 
     return match?.groupValues?.get(1) ?: descripcion
+}
+
+private fun formatShortTechnicianName(nombres: String, apellidos: String): String? {
+    val firstName = nombres.trim().split(Regex("\\s+")).firstOrNull().orEmpty()
+    val firstLastName = apellidos.trim().split(Regex("\\s+")).firstOrNull().orEmpty()
+    return listOf(firstName, firstLastName)
+        .filter { it.isNotBlank() }
+        .joinToString(" ")
+        .ifBlank { null }
 }
 
 private fun matchesDateFilter(

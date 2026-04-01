@@ -435,6 +435,9 @@ fun SectionCard(title: String, body: String) {
 @Composable
 fun SimpleInfoCard(title: String, lines: List<String>) {
     val colorScheme = MaterialTheme.colorScheme
+    val isTechnicianCard =
+        title.contains("CNICO", ignoreCase = true) ||
+            title.contains("ECNICO", ignoreCase = true)
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -447,11 +450,38 @@ fun SimpleInfoCard(title: String, lines: List<String>) {
         ) {
             Text(title, style = MaterialTheme.typography.labelMedium, color = colorScheme.onSurfaceVariant)
             lines.forEachIndexed { index, line ->
-                Text(
-                    text = line,
-                    style = if (index == 0) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodySmall,
-                    color = if (index == 0) colorScheme.onSurface else colorScheme.onSurfaceVariant
-                )
+                if (isTechnicianCard && index == 0) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = colorScheme.surface
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_tecnico),
+                                contentDescription = null,
+                                tint = colorScheme.primary,
+                                modifier = Modifier
+                                    .padding(10.dp)
+                                    .size(18.dp)
+                            )
+                        }
+
+                        Text(
+                            text = line,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colorScheme.onSurface
+                        )
+                    }
+                } else {
+                    Text(
+                        text = line,
+                        style = if (index == 0) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodySmall,
+                        color = if (index == 0) colorScheme.onSurface else colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
