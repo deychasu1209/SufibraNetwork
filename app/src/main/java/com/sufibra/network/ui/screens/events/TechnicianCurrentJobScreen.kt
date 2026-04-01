@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +60,7 @@ import com.sufibra.network.ui.theme.RojoAlto
 import com.sufibra.network.ui.theme.Turquesa
 import com.sufibra.network.ui.theme.VerdeFinalizado
 import com.sufibra.network.viewmodel.EventViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun TechnicianCurrentJobScreen(
@@ -246,6 +248,10 @@ fun TechnicianCurrentJobScreen(
                             color = colorScheme.onPrimaryContainer
                         )
                     }
+                }
+
+                if (event.estadoEvento == "TOMADO" || event.estadoEvento == "EN PROCESO") {
+                    TechnicianWorkTimerCard(event = event)
                 }
 
                 Card(
@@ -597,6 +603,103 @@ fun TechnicianCurrentJobScreen(
             }
         )
     }
+}
+
+@Composable
+private fun TechnicianWorkTimerCard(event: com.sufibra.network.domain.model.Event) {
+    val colorScheme = MaterialTheme.colorScheme
+    val accentColor = when (event.estadoEvento) {
+        "TOMADO" -> NaranjaTomado
+        "EN PROCESO" -> Turquesa
+        else -> colorScheme.primary
+    }
+
+    val baseTimestamp = when (event.estadoEvento) {
+        "EN PROCESO" -> event.fechaInicio
+        "TOMADO" -> event.fechaToma
+        else -> null
+    }
+
+    if (baseTimestamp == null) return
+
+    val currentTime by produceState(initialValue = System.currentTimeMillis(), baseTimestamp) {
+        while (true) {
+            value = System.currentTimeMillis()
+            delay(1000)
+        }
+    }
+
+    val elapsed = (currentTime - baseTimestamp).coerceAtLeast(0L)
+    val title = if (event.estadoEvento == "EN PROCESO") {
+        "Tiempo en trabajo"
+    } else {
+        "Tiempo desde la toma"
+    }
+    val subtitle = if (event.estadoEvento == "EN PROCESO") {
+        "Este contador corre desde que iniciaste el trabajo."
+    } else {
+        "Este contador corre desde que tomaste el evento."
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = accentColor.copy(alpha = 0.14f)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_fecha),
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .size(18.dp)
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colorScheme.onSurface
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Text(
+                text = formatElapsedTime(elapsed),
+                style = MaterialTheme.typography.headlineMedium,
+                color = accentColor
+            )
+        }
+    }
+}
+
+private fun formatElapsedTime(elapsedMillis: Long): String {
+    val totalSeconds = elapsedMillis / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
 @Composable
