@@ -35,6 +35,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
 import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.events.TechnicianActiveJobHeroCard
+import com.sufibra.network.ui.components.events.TechnicianActiveJobsEmptyCard
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.VerdeFinalizado
@@ -307,4 +309,6 @@ private fun JobsHistoryEmptyCard() {
         }
     }
 }
+
+
 

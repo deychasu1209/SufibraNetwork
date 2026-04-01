@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.screens.events
+﻿package com.sufibra.network.ui.screens.events
 
 import android.content.Intent
 import android.net.Uri
@@ -43,6 +43,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.clients.ClientFacadePhotoSection
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
 import com.sufibra.network.ui.theme.AmarilloMedio
 import com.sufibra.network.ui.theme.AzulPrincipal
@@ -351,3 +352,5 @@ fun TechnicianHistoryEventDetailScreen(
         }
     }
 }
+
+

@@ -30,7 +30,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.sufibra.network.R
 import com.sufibra.network.domain.model.Client
-import com.sufibra.network.ui.screens.events.ClientFacadePhotoSection
+import com.sufibra.network.ui.components.clients.ClientFacadePhotoSection
 
 @Composable
 fun ClientCard(
@@ -255,3 +255,4 @@ private fun ClientStatusBadge(
         )
     }
 }
+

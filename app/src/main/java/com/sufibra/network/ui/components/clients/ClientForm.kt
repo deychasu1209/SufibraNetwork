@@ -33,7 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.sufibra.network.BuildConfig
 import com.sufibra.network.R
-import com.sufibra.network.ui.screens.events.ClientFacadePhotoSection
+import com.sufibra.network.ui.components.clients.ClientFacadePhotoSection
 
 @Composable
 fun ClientForm(
@@ -260,3 +260,4 @@ fun ClientForm(
         )
     }
 }
+

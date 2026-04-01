@@ -1,4 +1,4 @@
-﻿package com.sufibra.network.ui.screens.events
+﻿package com.sufibra.network.ui.components.events
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +28,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.sufibra.network.R
 import com.sufibra.network.domain.model.Event
+import com.sufibra.network.ui.screens.events.StatusBadge
+import com.sufibra.network.ui.screens.events.extractDireccion
+import com.sufibra.network.ui.screens.events.formatDate
 import com.sufibra.network.ui.theme.AmarilloMedio
 import com.sufibra.network.ui.theme.AzulPrincipal
 import com.sufibra.network.ui.theme.AzulPrincipalOscuro
@@ -231,4 +234,6 @@ fun TechnicianActiveJobsEmptyCard() {
         }
     }
 }
+
+
 

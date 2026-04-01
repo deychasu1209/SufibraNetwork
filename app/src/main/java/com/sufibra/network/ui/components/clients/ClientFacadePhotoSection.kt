@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.screens.events
+package com.sufibra.network.ui.components.clients
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

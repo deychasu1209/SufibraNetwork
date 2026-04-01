@@ -1,4 +1,4 @@
-package com.sufibra.network.ui.screens.events
+﻿package com.sufibra.network.ui.screens.events
 
 import android.content.Intent
 import android.net.Uri
@@ -51,6 +51,7 @@ import androidx.navigation.NavController
 import com.sufibra.network.R
 import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.clients.ClientFacadePhotoSection
 import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
 import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
@@ -611,3 +612,5 @@ fun StatusBadge(text: String, backgroundColor: Color) {
         )
     }
 }
+
+

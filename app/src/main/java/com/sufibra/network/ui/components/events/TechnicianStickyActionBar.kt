@@ -1,4 +1,4 @@
-﻿package com.sufibra.network.ui.screens.events
+package com.sufibra.network.ui.components.events
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -77,3 +77,4 @@ fun TechnicianStickyActionBar(
         }
     }
 }
+

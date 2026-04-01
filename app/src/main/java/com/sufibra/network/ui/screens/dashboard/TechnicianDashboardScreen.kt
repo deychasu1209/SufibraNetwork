@@ -28,8 +28,8 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.ui.components.navigation.TechnicianBaseScreen
 import com.sufibra.network.ui.navigation.Screen
-import com.sufibra.network.ui.screens.events.TechnicianActiveJobHeroCard
-import com.sufibra.network.ui.screens.events.TechnicianActiveJobsEmptyCard
+import com.sufibra.network.ui.components.events.TechnicianActiveJobHeroCard
+import com.sufibra.network.ui.components.events.TechnicianActiveJobsEmptyCard
 import com.sufibra.network.viewmodel.EventViewModel
 
 @Composable
@@ -134,3 +134,5 @@ fun TechnicianDashboardScreen(navController: NavController) {
         }
     }
 }
+
+

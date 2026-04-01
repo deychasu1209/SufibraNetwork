@@ -48,6 +48,8 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.R
 import com.sufibra.network.ui.components.BackTopBar
+import com.sufibra.network.ui.components.clients.ClientFacadePhotoSection
+import com.sufibra.network.ui.components.events.TechnicianStickyActionBar
 import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
 import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.ui.components.navigation.TechnicianNavigationBar
@@ -749,6 +751,8 @@ fun CurrentJobEmptyState() {
         }
     }
 }
+
+
 
 
 
