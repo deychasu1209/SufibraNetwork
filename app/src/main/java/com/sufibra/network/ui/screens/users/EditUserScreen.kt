@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -107,6 +109,9 @@ fun EditUserScreen(
                         value = nombres,
                         onValueChange = { nombres = it },
                         label = { Text("Nombres") },
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -116,6 +121,9 @@ fun EditUserScreen(
                         value = apellidos,
                         onValueChange = { apellidos = it },
                         label = { Text("Apellidos") },
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Words
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -163,6 +171,9 @@ fun EditUserScreen(
                             value = zona,
                             onValueChange = { zona = it },
                             label = { Text("Zona asignada") },
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words
+                            ),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

@@ -17,9 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
 import com.sufibra.network.BuildConfig
 import com.sufibra.network.R
 
@@ -60,6 +61,9 @@ fun ClientForm(
             value = nombresApellidos,
             onValueChange = onNombresApellidosChange,
             label = { Text("Nombre y apellidos") },
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -83,6 +87,9 @@ fun ClientForm(
             value = direccion,
             onValueChange = onDireccionChange,
             label = { Text("Dirección") },
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -90,6 +97,9 @@ fun ClientForm(
             value = referencia,
             onValueChange = onReferenciaChange,
             label = { Text("Referencia") },
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Sentences
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -97,6 +107,9 @@ fun ClientForm(
             value = zona,
             onValueChange = onZonaChange,
             label = { Text("Zona") },
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.Words
+            ),
             modifier = Modifier.fillMaxWidth()
         )
 
