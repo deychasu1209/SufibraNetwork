@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -40,7 +41,11 @@ fun CreateClientScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val operationSuccess by viewModel.operationSuccess.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val isPhotoUploading by viewModel.isPhotoUploading.collectAsState()
+    val photoUploadError by viewModel.photoUploadError.collectAsState()
+    val uploadedPhotoUrl by viewModel.uploadedPhotoUrl.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+    val context = LocalContext.current
 
     var nombresApellidos by remember { mutableStateOf("") }
     var dni by remember { mutableStateOf("") }
@@ -57,6 +62,13 @@ fun CreateClientScreen(
         if (operationSuccess == true) {
             viewModel.resetOperationState()
             navController.popBackStack()
+        }
+    }
+
+    LaunchedEffect(uploadedPhotoUrl) {
+        uploadedPhotoUrl?.let { url ->
+            fotoFachada = url
+            viewModel.consumeUploadedPhotoUrl()
         }
     }
 
@@ -130,7 +142,16 @@ fun CreateClientScreen(
                     onFotoFachadaChange = {
                         fotoFachada = it
                         if (errorMessage != null) viewModel.clearError()
-                    }
+                    },
+                    onPhotoSelected = { uri ->
+                        viewModel.uploadClientFacadePhoto(context.applicationContext, uri)
+                    },
+                    onPhotoRemoved = {
+                        fotoFachada = ""
+                        viewModel.clearPhotoUploadState()
+                    },
+                    isPhotoUploading = isPhotoUploading,
+                    photoUploadError = photoUploadError
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -154,7 +175,7 @@ fun CreateClientScreen(
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading
+                    enabled = !isLoading && !isPhotoUploading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator()

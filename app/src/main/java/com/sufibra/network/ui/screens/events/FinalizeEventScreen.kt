@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -68,7 +69,11 @@ fun FinalizeEventScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val finalizeEventSuccess by viewModel.finalizeEventSuccess.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val isPhotoUploading by viewModel.isPhotoUploading.collectAsState()
+    val photoUploadError by viewModel.photoUploadError.collectAsState()
+    val uploadedPhotoUrl by viewModel.uploadedPhotoUrl.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+    val context = LocalContext.current
 
     var solucionAplicada by remember { mutableStateOf("") }
     var observaciones by remember { mutableStateOf("") }
@@ -99,6 +104,13 @@ fun FinalizeEventScreen(
             }
             false -> Unit
             null -> Unit
+        }
+    }
+
+    LaunchedEffect(uploadedPhotoUrl) {
+        uploadedPhotoUrl?.let { url ->
+            fotoFachada = url
+            viewModel.consumeUploadedPhotoUrl()
         }
     }
 
@@ -266,7 +278,16 @@ fun FinalizeEventScreen(
                                     onFotoFachadaChange = {
                                         fotoFachada = it
                                         if (errorMessage != null) viewModel.clearError()
-                                    }
+                                    },
+                                    onPhotoSelected = { uri ->
+                                        viewModel.uploadClientFacadePhoto(context.applicationContext, uri)
+                                    },
+                                    onPhotoRemoved = {
+                                        fotoFachada = ""
+                                        viewModel.clearPhotoUploadState()
+                                    },
+                                    isPhotoUploading = isPhotoUploading,
+                                    photoUploadError = photoUploadError
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -298,6 +319,13 @@ fun FinalizeEventScreen(
                             )
                         }
 
+                        if (isPhotoUploading) {
+                            FeedbackMessageCard(
+                                message = "Estamos subiendo la foto de fachada.",
+                                type = FeedbackMessageType.INFO
+                            )
+                        }
+
                         errorMessage?.let { message ->
                             FeedbackMessageCard(
                                 message = message,
@@ -321,7 +349,7 @@ fun FinalizeEventScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = buttonColor
                             ),
-                            enabled = !isLoading
+                            enabled = !isLoading && !isPhotoUploading
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
@@ -401,7 +429,7 @@ fun FinalizeEventScreen(
                             )
                         }
                     },
-                    enabled = !isLoading
+                    enabled = !isLoading && !isPhotoUploading
                 ) {
                     if (isLoading) {
                         CircularProgressIndicator(
@@ -418,7 +446,7 @@ fun FinalizeEventScreen(
                     onClick = {
                         showFinalizeDialog = false
                     },
-                    enabled = !isLoading
+                    enabled = !isLoading && !isPhotoUploading
                 ) {
                     Text("Cancelar")
                 }

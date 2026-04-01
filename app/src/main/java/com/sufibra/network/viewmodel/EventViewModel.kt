@@ -1,10 +1,13 @@
 package com.sufibra.network.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.sufibra.network.data.repository.ClientRepository
 import com.sufibra.network.data.repository.EventRepository
+import com.sufibra.network.data.repository.StorageRepository
 import com.sufibra.network.data.repository.UserRepository
 import com.sufibra.network.domain.model.Client
 import com.sufibra.network.domain.model.Event
@@ -18,6 +21,7 @@ class EventViewModel : ViewModel() {
     private val repository = EventRepository()
     private val clientRepository = ClientRepository()
     private val userRepository = UserRepository()
+    private val storageRepository = StorageRepository()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -66,6 +70,15 @@ class EventViewModel : ViewModel() {
 
     private val _releaseEventSuccess = MutableStateFlow<Boolean?>(null)
     val releaseEventSuccess: StateFlow<Boolean?> = _releaseEventSuccess
+
+    private val _isPhotoUploading = MutableStateFlow(false)
+    val isPhotoUploading: StateFlow<Boolean> = _isPhotoUploading
+
+    private val _photoUploadError = MutableStateFlow<String?>(null)
+    val photoUploadError: StateFlow<String?> = _photoUploadError
+
+    private val _uploadedPhotoUrl = MutableStateFlow<String?>(null)
+    val uploadedPhotoUrl: StateFlow<String?> = _uploadedPhotoUrl
 
     private var currentAdminStateFilter: String? = null
     private var currentAdminTypeFilter: String? = null
@@ -203,6 +216,33 @@ class EventViewModel : ViewModel() {
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun uploadClientFacadePhoto(context: Context, imageUri: Uri) {
+        viewModelScope.launch {
+            _isPhotoUploading.value = true
+            _photoUploadError.value = null
+
+            val result = storageRepository.uploadClientFacadePhoto(context, imageUri)
+            result.onSuccess {
+                _uploadedPhotoUrl.value = it
+            }
+            result.onFailure {
+                _photoUploadError.value =
+                    it.message ?: "No se pudo subir la foto de fachada."
+            }
+
+            _isPhotoUploading.value = false
+        }
+    }
+
+    fun consumeUploadedPhotoUrl() {
+        _uploadedPhotoUrl.value = null
+    }
+
+    fun clearPhotoUploadState() {
+        _photoUploadError.value = null
+        _uploadedPhotoUrl.value = null
     }
 
     fun clearTakeEventState() {

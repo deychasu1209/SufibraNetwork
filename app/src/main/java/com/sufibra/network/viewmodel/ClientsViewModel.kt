@@ -1,9 +1,12 @@
 package com.sufibra.network.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sufibra.network.data.repository.ClientRepository
+import com.sufibra.network.data.repository.StorageRepository
 import com.sufibra.network.domain.model.Client
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +15,7 @@ import kotlinx.coroutines.launch
 class ClientsViewModel : ViewModel() {
 
     private val repository = ClientRepository()
+    private val storageRepository = StorageRepository()
 
     private val _clients = MutableStateFlow<List<Client>>(emptyList())
     val clients: StateFlow<List<Client>> = _clients
@@ -27,6 +31,15 @@ class ClientsViewModel : ViewModel() {
 
     private val _operationSuccess = MutableStateFlow<Boolean?>(null)
     val operationSuccess: StateFlow<Boolean?> = _operationSuccess
+
+    private val _isPhotoUploading = MutableStateFlow(false)
+    val isPhotoUploading: StateFlow<Boolean> = _isPhotoUploading
+
+    private val _photoUploadError = MutableStateFlow<String?>(null)
+    val photoUploadError: StateFlow<String?> = _photoUploadError
+
+    private val _uploadedPhotoUrl = MutableStateFlow<String?>(null)
+    val uploadedPhotoUrl: StateFlow<String?> = _uploadedPhotoUrl
 
     fun loadClients() {
         viewModelScope.launch {
@@ -123,6 +136,33 @@ class ClientsViewModel : ViewModel() {
 
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    fun uploadClientFacadePhoto(context: Context, imageUri: Uri) {
+        viewModelScope.launch {
+            _isPhotoUploading.value = true
+            _photoUploadError.value = null
+
+            val result = storageRepository.uploadClientFacadePhoto(context, imageUri)
+            result.onSuccess {
+                _uploadedPhotoUrl.value = it
+            }
+            result.onFailure {
+                _photoUploadError.value =
+                    it.message ?: "No se pudo subir la foto de fachada."
+            }
+
+            _isPhotoUploading.value = false
+        }
+    }
+
+    fun consumeUploadedPhotoUrl() {
+        _uploadedPhotoUrl.value = null
+    }
+
+    fun clearPhotoUploadState() {
+        _photoUploadError.value = null
+        _uploadedPhotoUrl.value = null
     }
 
     fun resetOperationState() {

@@ -91,7 +91,9 @@ fun ClientFacadePhotoSection(
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 20.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -105,7 +107,7 @@ fun ClientFacadePhotoSection(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.ic_ubicacion),
+                            painter = painterResource(R.drawable.ic_foto),
                             contentDescription = null,
                             tint = accentColor
                         )

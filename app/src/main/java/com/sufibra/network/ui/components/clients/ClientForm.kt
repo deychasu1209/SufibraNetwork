@@ -1,13 +1,23 @@
 package com.sufibra.network.ui.components.clients
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.sufibra.network.BuildConfig
 import com.sufibra.network.R
+import com.sufibra.network.ui.screens.events.ClientFacadePhotoSection
 
 @Composable
 fun ClientForm(
@@ -46,12 +57,23 @@ fun ClientForm(
     onPuertoNapChange: (String) -> Unit,
     onLinkMapsChange: (String) -> Unit,
     onFotoFachadaChange: (String) -> Unit,
+    onPhotoSelected: (Uri) -> Unit,
+    onPhotoRemoved: () -> Unit,
+    isPhotoUploading: Boolean,
+    photoUploadError: String?,
     modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
     var mapsPickerError by remember { mutableStateOf<String?>(null) }
     var showMapPicker by remember { mutableStateOf(false) }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            onPhotoSelected(uri)
+        }
+    }
 
     Column(
         modifier = modifier,
@@ -169,15 +191,58 @@ fun ClientForm(
             )
         }
 
-        OutlinedTextField(
-            value = fotoFachada,
-            onValueChange = onFotoFachadaChange,
-            label = { Text("Foto fachada") },
-            modifier = Modifier.fillMaxWidth()
+        ClientFacadePhotoSection(
+            photoUrl = fotoFachada,
+            accentColor = colorScheme.primary
         )
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = {
+                    imagePickerLauncher.launch("image/*")
+                },
+                modifier = Modifier.weight(1f),
+                enabled = !isPhotoUploading
+            ) {
+                if (isPhotoUploading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(if (fotoFachada.isBlank()) "Subir foto" else "Cambiar foto")
+                }
+            }
+
+            if (fotoFachada.isNotBlank()) {
+                OutlinedButton(
+                    onClick = onPhotoRemoved,
+                    modifier = Modifier.weight(1f),
+                    enabled = !isPhotoUploading
+                ) {
+                    Text("Quitar foto")
+                }
+            }
+        }
+
+        if (isPhotoUploading) {
+            Text(
+                text = "Subiendo foto de fachada...",
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant
+            )
+        }
+
+        photoUploadError?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.error
+            )
+        }
+
         Text(
-            text = "El DNI debe tener 8 dígitos y el celular 9. Los campos de referencia, caja NAP, puerto NAP, Link Maps y foto pueden quedar vacíos.",
+            text = "El DNI debe tener 8 dígitos y el celular 9. Los campos de referencia, caja NAP, puerto NAP y Link Maps pueden quedar vacíos. La foto se sube automáticamente y se guarda como enlace.",
             style = MaterialTheme.typography.bodySmall,
             color = colorScheme.onSurfaceVariant
         )

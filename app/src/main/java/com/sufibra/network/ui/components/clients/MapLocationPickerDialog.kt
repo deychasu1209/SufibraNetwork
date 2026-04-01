@@ -131,7 +131,7 @@ fun MapLocationPickerDialog(
 
     var hasLocationPermission by remember { mutableStateOf(context.hasLocationPermission()) }
     var isLocationEnabled by remember { mutableStateOf(context.isLocationEnabled()) }
-    var hasCenteredOnCurrentLocation by remember { mutableStateOf(false) }
+    var hasAutoCentered by remember(currentLinkMaps) { mutableStateOf(false) }
     var locationHelpText by remember {
         mutableStateOf("Mueve el mapa y deja el pin sobre el punto exacto.")
     }
@@ -149,7 +149,7 @@ fun MapLocationPickerDialog(
             !isLocationEnabled ->
                 "Activa la ubicación del dispositivo para poder elegir el punto exacto en el mapa."
             else ->
-                "Mueve el mapa y deja el pin sobre el punto exacto."
+                "Ubicación activa. Usa el botón de centrar si quieres ir a tu posición actual."
         }
     }
 
@@ -182,18 +182,26 @@ fun MapLocationPickerDialog(
             return@LaunchedEffect
         }
 
-        if (!hasCenteredOnCurrentLocation) {
+        if (!hasAutoCentered && currentLinkMaps.isBlank()) {
+            delay(450)
             val currentLocation = context.getCurrentLatLng()
             if (currentLocation != null) {
-                cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocation, 18f))
-                hasCenteredOnCurrentLocation = true
+                cameraPositionState.animate(
+                    update = CameraUpdateFactory.newLatLngZoom(currentLocation, 18f),
+                    durationMs = 900
+                )
+                hasAutoCentered = true
                 locationHelpText =
-                    "Tu ubicación actual ya está centrada. Ajusta el pin si hace falta."
+                    "Mapa centrado en tu ubicación actual. Ajusta el pin si hace falta."
             } else {
                 locationHelpText =
-                    "No se pudo obtener tu ubicación exacta todavía. Revisa el GPS e inténtalo nuevamente."
+                    "No se pudo obtener tu ubicación exacta todavía. Usa el botón de centrar e inténtalo nuevamente."
             }
+            return@LaunchedEffect
         }
+
+        locationHelpText =
+            "Ubicación activa. Usa el botón de centrar si quieres ir a tu posición actual."
     }
 
     Dialog(
@@ -359,7 +367,6 @@ fun MapLocationPickerDialog(
                                         if (isLocationEnabled) {
                                             locationHelpText =
                                                 "Ubicación activada. Ya puedes mover el mapa y elegir el punto exacto."
-                                            hasCenteredOnCurrentLocation = false
                                         }
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -372,37 +379,39 @@ fun MapLocationPickerDialog(
                     }
                 }
 
-                Box(
-                    modifier = Modifier.align(Alignment.Center),
-                    contentAlignment = Alignment.Center
-                ) {
+                if (canUseLocation) {
                     Box(
-                        modifier = Modifier
-                            .offset(y = 10.dp)
-                            .size(width = 22.dp, height = 8.dp)
-                            .graphicsLayer {
-                                scaleX = pinShadowScale
-                                scaleY = pinShadowScale
-                                alpha = pinShadowAlpha
-                            }
-                            .background(
-                                color = colorScheme.scrim.copy(alpha = 0.55f),
-                                shape = CircleShape
-                            )
-                    )
+                        modifier = Modifier.align(Alignment.Center),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .offset(y = 10.dp)
+                                .size(width = 22.dp, height = 8.dp)
+                                .graphicsLayer {
+                                    scaleX = pinShadowScale
+                                    scaleY = pinShadowScale
+                                    alpha = pinShadowAlpha
+                                }
+                                .background(
+                                    color = colorScheme.scrim.copy(alpha = 0.55f),
+                                    shape = CircleShape
+                                )
+                        )
 
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_ubicacion),
-                        contentDescription = null,
-                        tint = colorScheme.primary,
-                        modifier = Modifier
-                            .size(44.dp)
-                            .graphicsLayer {
-                                scaleX = pinScale
-                                scaleY = pinScale
-                            }
-                            .offset(y = pinOffsetY.dp)
-                    )
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_ubicacion),
+                            contentDescription = null,
+                            tint = colorScheme.primary,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .graphicsLayer {
+                                    scaleX = pinScale
+                                    scaleY = pinScale
+                                }
+                                .offset(y = pinOffsetY.dp)
+                        )
+                    }
                 }
 
                 Card(
@@ -536,18 +545,20 @@ private fun Context.openLocationSettings() {
 
 @SuppressLint("MissingPermission")
 private suspend fun Context.getCurrentLatLng(): LatLng? {
-    if (!isLocationEnabled()) return null
+    return runCatching {
+        if (!isLocationEnabled()) return null
 
-    val client = LocationServices.getFusedLocationProviderClient(this)
+        val client = LocationServices.getFusedLocationProviderClient(this)
 
-    client.lastLocation.await()?.let { lastLocation ->
-        return LatLng(lastLocation.latitude, lastLocation.longitude)
-    }
+        client.lastLocation.await()?.let { lastLocation ->
+            return LatLng(lastLocation.latitude, lastLocation.longitude)
+        }
 
-    val cancellationTokenSource = CancellationTokenSource()
-    val currentLocation = client
-        .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token)
-        .await()
+        val cancellationTokenSource = CancellationTokenSource()
+        val currentLocation = client
+            .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.token)
+            .await()
 
-    return currentLocation?.let { LatLng(it.latitude, it.longitude) }
+        currentLocation?.let { LatLng(it.latitude, it.longitude) }
+    }.getOrNull()
 }
