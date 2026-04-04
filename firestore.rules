@@ -102,7 +102,7 @@ service cloud.firestore {
           .hasOnly(["disponible"]);
     }
 
-    function hasValidClientShape(clientId) {
+    function hasRequiredClientShape(clientId) {
       return request.resource.data.idCliente == clientId
         && isNonEmptyString(request.resource.data.nombresApellidos)
         && request.resource.data.dni is string
@@ -111,11 +111,11 @@ service cloud.firestore {
         && request.resource.data.celular.size() == 9
         && isNonEmptyString(request.resource.data.zona)
         && isNonEmptyString(request.resource.data.direccion)
-        && request.resource.data.referencia is string
-        && request.resource.data.linkMaps is string
-        && request.resource.data.fotoFachada is string
-        && request.resource.data.cajaNAP is string
-        && request.resource.data.puertoNAP is string
+        && isNullableString(request.resource.data.referencia)
+        && isNullableString(request.resource.data.linkMaps)
+        && isNullableString(request.resource.data.fotoFachada)
+        && isNullableString(request.resource.data.cajaNAP)
+        && isNullableString(request.resource.data.puertoNAP)
         && request.resource.data.estadoCliente is bool
         && request.resource.data.fechaRegistro is int;
     }
@@ -162,9 +162,13 @@ service cloud.firestore {
     }
 
     function isTakingOwnEvent() {
-      return hasValidEventShape(resource.data.idEvento)
+      return resource.data.idEvento == request.resource.data.idEvento
         && resource.data.estadoEvento == "DISPONIBLE"
         && resource.data.tecnicoId == null
+        && resource.data.tipoEvento == request.resource.data.tipoEvento
+        && resource.data.descripcion == request.resource.data.descripcion
+        && resource.data.prioridad == request.resource.data.prioridad
+        && resource.data.fechaCreacion == request.resource.data.fechaCreacion
         && request.resource.data.estadoEvento == "TOMADO"
         && request.resource.data.tecnicoId == request.auth.uid
         && request.resource.data.fechaToma is int
@@ -173,9 +177,14 @@ service cloud.firestore {
     }
 
     function isStartingOwnEvent() {
-      return hasValidEventShape(resource.data.idEvento)
+      return resource.data.idEvento == request.resource.data.idEvento
         && resource.data.estadoEvento == "TOMADO"
         && resource.data.tecnicoId == request.auth.uid
+        && resource.data.tipoEvento == request.resource.data.tipoEvento
+        && resource.data.descripcion == request.resource.data.descripcion
+        && resource.data.prioridad == request.resource.data.prioridad
+        && resource.data.fechaCreacion == request.resource.data.fechaCreacion
+        && resource.data.fechaToma == request.resource.data.fechaToma
         && request.resource.data.estadoEvento == "EN PROCESO"
         && request.resource.data.tecnicoId == resource.data.tecnicoId
         && request.resource.data.fechaInicio is int
@@ -184,10 +193,15 @@ service cloud.firestore {
     }
 
     function isFinalizingAveria() {
-      return hasValidEventShape(resource.data.idEvento)
+      return resource.data.idEvento == request.resource.data.idEvento
         && resource.data.tipoEvento == "AVERIA"
         && resource.data.estadoEvento == "EN PROCESO"
         && resource.data.tecnicoId == request.auth.uid
+        && resource.data.descripcion == request.resource.data.descripcion
+        && resource.data.prioridad == request.resource.data.prioridad
+        && resource.data.fechaCreacion == request.resource.data.fechaCreacion
+        && resource.data.fechaToma == request.resource.data.fechaToma
+        && resource.data.fechaInicio == request.resource.data.fechaInicio
         && request.resource.data.estadoEvento == "FINALIZADO"
         && request.resource.data.tecnicoId == resource.data.tecnicoId
         && request.resource.data.clienteId == resource.data.clienteId
@@ -199,10 +213,15 @@ service cloud.firestore {
     }
 
     function isFinalizingInstallation() {
-      return hasValidEventShape(resource.data.idEvento)
+      return resource.data.idEvento == request.resource.data.idEvento
         && resource.data.tipoEvento == "INSTALACION"
         && resource.data.estadoEvento == "EN PROCESO"
         && resource.data.tecnicoId == request.auth.uid
+        && resource.data.descripcion == request.resource.data.descripcion
+        && resource.data.prioridad == request.resource.data.prioridad
+        && resource.data.fechaCreacion == request.resource.data.fechaCreacion
+        && resource.data.fechaToma == request.resource.data.fechaToma
+        && resource.data.fechaInicio == request.resource.data.fechaInicio
         && request.resource.data.estadoEvento == "FINALIZADO"
         && request.resource.data.tecnicoId == resource.data.tecnicoId
         && isNonEmptyString(request.resource.data.clienteId)
@@ -234,10 +253,10 @@ service cloud.firestore {
       allow read: if isAdmin() || isTechnician();
 
       allow create: if (isAdmin() || isTechnician())
-        && hasValidClientShape(clientId);
+        && hasRequiredClientShape(clientId);
 
       allow update: if isAdmin()
-        && hasValidClientShape(resource.data.idCliente)
+        && hasRequiredClientShape(resource.data.idCliente)
         && keepsImmutableClientFields();
 
       allow delete: if false;
