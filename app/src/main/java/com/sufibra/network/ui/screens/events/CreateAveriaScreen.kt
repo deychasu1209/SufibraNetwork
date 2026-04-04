@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,6 +56,7 @@ import com.sufibra.network.domain.model.Client
 import com.sufibra.network.domain.model.Event
 import com.sufibra.network.ui.components.BackTopBar
 import com.sufibra.network.ui.components.clients.ClientFacadePhotoSection
+import com.sufibra.network.ui.components.clients.SearchableClientPickerDialog
 import com.sufibra.network.ui.components.feedback.FeedbackMessageCard
 import com.sufibra.network.ui.components.feedback.FeedbackMessageType
 import com.sufibra.network.viewmodel.EventViewModel
@@ -74,7 +76,7 @@ fun CreateAveriaScreen(navController: NavController) {
     var selectedClient by remember { mutableStateOf<Client?>(null) }
 
     var expandedPriority by remember { mutableStateOf(false) }
-    var expandedClient by remember { mutableStateOf(false) }
+    var showClientPicker by remember { mutableStateOf(false) }
     var clientDetailExpanded by remember { mutableStateOf(false) }
 
     var isLoading by remember { mutableStateOf(false) }
@@ -142,39 +144,60 @@ fun CreateAveriaScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                ExposedDropdownMenuBox(
-                    expanded = expandedClient,
-                    onExpandedChange = { expandedClient = !expandedClient }
-                ) {
-                    OutlinedTextField(
-                        value = selectedClient?.nombresApellidos ?: "",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Seleccionar Cliente") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedClient)
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
+                Text(
+                    text = "Seleccionar cliente",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colorScheme.onSurfaceVariant
+                )
 
-                    ExposedDropdownMenu(
-                        expanded = expandedClient,
-                        onDismissRequest = { expandedClient = false }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showClientPicker = true },
+                    shape = RoundedCornerShape(16.dp),
+                    color = colorScheme.surfaceVariant,
+                    tonalElevation = 1.dp
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        clients.forEach { client ->
-                            DropdownMenuItem(
-                                text = { Text(client.nombresApellidos) },
-                                onClick = {
-                                    selectedClient = client
-                                    clientDetailExpanded = false
-                                    expandedClient = false
-                                    if (feedbackMessage != null) feedbackMessage = null
-                                }
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(R.drawable.ic_lupa),
+                            contentDescription = null,
+                            tint = colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = selectedClient?.nombresApellidos ?: "Toca para buscar un cliente",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (selectedClient != null) {
+                                colorScheme.onSurface
+                            } else {
+                                colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
+                }
+
+                if (selectedClient != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Cliente seleccionado: ${selectedClient!!.nombresApellidos}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 if (selectedClient != null) {
@@ -265,6 +288,20 @@ fun CreateAveriaScreen(navController: NavController) {
 
             }
         }
+    }
+
+    if (showClientPicker) {
+        SearchableClientPickerDialog(
+            clients = clients,
+            selectedClientId = selectedClient?.idCliente,
+            onDismiss = { showClientPicker = false },
+            onClientSelected = { client ->
+                selectedClient = client
+                clientDetailExpanded = false
+                showClientPicker = false
+                if (feedbackMessage != null) feedbackMessage = null
+            }
+        )
     }
 }
 
