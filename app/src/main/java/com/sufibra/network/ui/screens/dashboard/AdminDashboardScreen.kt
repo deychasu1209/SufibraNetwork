@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,6 +41,7 @@ import androidx.navigation.NavController
 import com.sufibra.network.R
 import com.sufibra.network.domain.model.AdminDashboardMetrics
 import com.sufibra.network.ui.components.navigation.AdminBaseScreen
+import com.sufibra.network.ui.components.profile.UserInitialAvatar
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.theme.AmarilloMedio
 import com.sufibra.network.ui.theme.AzulPrincipal
@@ -47,14 +49,21 @@ import com.sufibra.network.ui.theme.NaranjaTomado
 import com.sufibra.network.ui.theme.Turquesa
 import com.sufibra.network.ui.theme.VerdeFinalizado
 import com.sufibra.network.viewmodel.DashboardViewModel
+import com.sufibra.network.viewmodel.ProfileViewModel
 
 @Composable
 fun AdminDashboardScreen(navController: NavController) {
     val viewModel: DashboardViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
     val metrics by viewModel.metrics.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val currentUser by profileViewModel.currentUser.collectAsState()
     val colorScheme = MaterialTheme.colorScheme
+
+    LaunchedEffect(Unit) {
+        profileViewModel.loadCurrentUser()
+    }
 
     AdminBaseScreen(navController) { padding ->
         Column(
@@ -65,7 +74,9 @@ fun AdminDashboardScreen(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            DashboardHeader()
+            DashboardHeaderWithInitial(
+                userInitial = currentUser?.nombres?.trim()?.take(1)
+            )
 
             when {
                 isLoading && metrics == null -> {
@@ -123,6 +134,37 @@ private fun DashboardHeader() {
             style = MaterialTheme.typography.bodyMedium,
             color = colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+private fun DashboardHeaderWithInitial(userInitial: String?) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Panel administrador",
+                style = MaterialTheme.typography.headlineSmall,
+                color = colorScheme.onBackground
+            )
+
+            Text(
+                text = "Consulta el estado actual del sistema y entra rápido a los módulos principales.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.size(12.dp))
+        UserInitialAvatar(initial = userInitial)
     }
 }
 

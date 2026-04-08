@@ -1,8 +1,6 @@
 ﻿package com.sufibra.network.ui.screens.dashboard
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -30,14 +27,18 @@ import com.sufibra.network.ui.components.navigation.TechnicianBaseScreen
 import com.sufibra.network.ui.navigation.Screen
 import com.sufibra.network.ui.components.events.TechnicianActiveJobHeroCard
 import com.sufibra.network.ui.components.events.TechnicianActiveJobsEmptyCard
+import com.sufibra.network.ui.components.profile.UserInitialAvatar
 import com.sufibra.network.viewmodel.EventViewModel
+import com.sufibra.network.viewmodel.ProfileViewModel
 
 @Composable
 fun TechnicianDashboardScreen(navController: NavController) {
     val eventViewModel: EventViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val profileViewModel: ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val currentEvent by eventViewModel.currentTechnicianEvent.collectAsState()
     val availableEvents by eventViewModel.availableEvents.collectAsState()
     val clients by eventViewModel.clients.collectAsState()
+    val currentUser by profileViewModel.currentUser.collectAsState()
     val technicianId = FirebaseAuth.getInstance().currentUser?.uid
     val colorScheme = MaterialTheme.colorScheme
     val clientsMap = clients.associateBy { it.idCliente }
@@ -49,6 +50,10 @@ fun TechnicianDashboardScreen(navController: NavController) {
             eventViewModel.loadAvailableEvents()
             eventViewModel.loadClients()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        profileViewModel.loadCurrentUser()
     }
 
     TechnicianBaseScreen(navController) { padding ->
@@ -69,10 +74,8 @@ fun TechnicianDashboardScreen(navController: NavController) {
                     style = MaterialTheme.typography.titleLarge
                 )
 
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(colorScheme.secondaryContainer, CircleShape)
+                UserInitialAvatar(
+                    initial = currentUser?.nombres?.trim()?.take(1)
                 )
             }
 
